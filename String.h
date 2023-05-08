@@ -3,10 +3,12 @@
 #include "helperFunctions.h"
 #include <iostream>
 
-const int MAX_SMALL_STRING_LENGTH = NUMBER_OF_BYTES_IN_CHAR_PTR + NUMBER_OF_BYTES_IN_SIZE_T - 1;
-const long long MAX_STRING_LENGTH = NUMBER_OF_BYTES_IN_SIZE_T == 4 ? pow(2, 31) - 1 : pow(2, 63) - 1;
+namespace {
+    const int MAX_SMALL_STRING_LENGTH = NUMBER_OF_BYTES_IN_CHAR_PTR + NUMBER_OF_BYTES_IN_SIZE_T - 1;
+    const long long MAX_STRING_LENGTH = NUMBER_OF_BYTES_IN_SIZE_T == 4 ? pow(2, 31) - 1 : pow(2, 63) - 1;
 
-const char* const DEFAULT_STRING = "\0";
+    const char* const DEFAULT_STRING = "\0";
+}
 
 class String {
     union {
