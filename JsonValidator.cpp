@@ -1,6 +1,6 @@
 #include "JsonValidator.h"
 #include "InvalidJsonSyntax.h"
-#include "helperFunctions.h"
+#include "fileFunctions.h"
 
 void JsonValidator::assertIndex(unsigned index) const {
     if(index > (_tokenCount - 1)) {
