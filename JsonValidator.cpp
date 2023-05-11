@@ -24,36 +24,43 @@ void JsonValidator::setTokens(std::ifstream& in) {
 
         switch (currentSymbol) {
             case '"':
-                _tokens += '\"';
+                _tokens += currentSymbol;
                 stringHasNotBeenClosed = !stringHasNotBeenClosed;
                 break;
 
             case '{':
-                _tokens += '{';
-                break;
-
             case '}':
-                _tokens += '}';
-                break;
 
             case '[':
-                _tokens += '[';
-                break;
-
             case ']':
-                _tokens += ']';
-                break;
 
             case ':':
-                _tokens += ':';
-                break;
-
             case ',':
-                _tokens += ',';
-                break;
+
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '.':
+
+            case 't':
+            case 'r':
+            case 'u':
+            case 'e':
+            case 'f':
+            case 'a':
+            case 'l':
+            case 's':
+            case 'n':
 
             case '\n':
-                _tokens += '\n';
+                _tokens += currentSymbol;
                 break;
 
             case ' ':
@@ -149,6 +156,60 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
     return rows;
 }
 
+bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
+                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
+
+    return (lastPositionOfClosedBracket > lastPositionOfOpenBracket || lastPositionOfOpenBrace > lastPositionOfOpenBracket)
+           && lastPositionOfOpenBrace > lastPositionOfClosedBrace;
+}
+
+bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
+                                            long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
+
+    return (lastPositionOfClosedBrace > lastPositionOfOpenBrace || lastPositionOfOpenBracket > lastPositionOfOpenBrace)
+           && lastPositionOfOpenBracket > lastPositionOfClosedBracket;
+}
+
+bool JsonValidator::validTokenBeforeOpenBrace(char token) {
+
+    return token == ',' || token == ':' || token == '[' || token == 0;
+}
+
+bool JsonValidator::validTokenBeforeClosedBrace(char token) {
+
+    return token == '{' || token == '}' || token == '\"' || token == ']' || token == 'e' || token == 'l' || (token >= '0' && token <= '9');
+}
+
+bool JsonValidator::validTokenBeforeOpenBracket(char token) {
+
+    return token == '[' || token == ':' || token == ',' || token == 0;
+}
+
+bool JsonValidator::validTokenBeforeClosedBracket(char token) {
+
+    return token == '}' || token == '\"' || token == '[' || token == ']' || token == 'e' || token == 'l' || (token >= '0' && token <= '9');
+}
+
+bool JsonValidator::validTokenBeforeQuotationMark(char token) {
+
+    return token == '\"' || token == ':' || token == ',' || token == '{' || token == '[';
+}
+
+bool JsonValidator::validTokensPrecedingColonInJsonObject(char token, char tokenThreePositionsBack) {
+
+    return token == '\"' && (tokenThreePositionsBack == ',' || tokenThreePositionsBack == '{');
+}
+
+bool JsonValidator::validTokensPrecedingCommaInJsonObject(char token, char tokenThreePositionsBack) {
+
+    return validTokensPrecedingCommaInJsonArray(token) && tokenThreePositionsBack != '{' && tokenThreePositionsBack != ',';
+}
+
+bool JsonValidator::validTokensPrecedingCommaInJsonArray(char token) {
+
+    return token == '\"' || token == '}' || token == ']' || token == 'e' || token == 'l' || (token >= '0' && token <= '9');
+}
+
 void JsonValidator::validateBraceMatching() const {
     unsigned numberOfOpenBraces = getTokenCount('{', _tokenCount - 1);
     unsigned numberOfClosedBraces = getTokenCount('}', _tokenCount - 1);
@@ -180,7 +241,7 @@ void JsonValidator::validateBracePlacement() const {
         long long positionOfOpenBrace = getPositionOfToken('{', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBrace, 1);
 
-        if(previousToken != ',' && previousToken != ':' && previousToken != '[' && previousToken != 0) {
+        if(validTokenBeforeOpenBrace(previousToken)) {
             String message = "Out of place open brace at row ";
             message += getRowPositionOfToken(positionOfOpenBrace);
 
@@ -192,7 +253,7 @@ void JsonValidator::validateBracePlacement() const {
         long long positionOfClosedBrace = getPositionOfToken('}', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBrace, 1);
 
-        if(previousToken != '{' && previousToken != '}' && previousToken != '\"' && previousToken != ']') {
+        if(validTokenBeforeClosedBrace(previousToken)) {
             String message = "Out of place closed brace at row ";
             message += getRowPositionOfToken(positionOfClosedBrace);
 
@@ -232,7 +293,7 @@ void JsonValidator::validateBracketPlacement() const {
         long long positionOfOpenBracket = getPositionOfToken('[', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBracket, 1);
 
-        if(previousToken != '[' && previousToken != ':' && previousToken != ',' && previousToken != 0) {
+        if(validTokenBeforeOpenBracket(previousToken)) {
             String message = "Out of place open bracket at row ";
             message += getRowPositionOfToken(positionOfOpenBracket);
 
@@ -244,7 +305,7 @@ void JsonValidator::validateBracketPlacement() const {
         long long positionOfClosedBracket = getPositionOfToken(']', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBracket, 1);
 
-        if(previousToken != '}' && previousToken != '\"' && previousToken != '[' && previousToken != ']') {
+        if(validTokenBeforeClosedBracket(previousToken)) {
             String message = "Out of place closed bracket at row ";
             message += getRowPositionOfToken(positionOfClosedBracket);
 
@@ -260,7 +321,7 @@ void JsonValidator::validateQuotationMarkPlacement() const {
         long long positionOfQuotationMark = getPositionOfToken('\"', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfQuotationMark, 1);
 
-        if(previousToken != '\"' && previousToken != ',' && previousToken != ':' && previousToken != '[' && previousToken != '{') {
+        if(validTokenBeforeQuotationMark(previousToken)) {
             String message = "Out of place quotation mark at row ";
             message += getRowPositionOfToken(positionOfQuotationMark);
 
@@ -282,16 +343,14 @@ void JsonValidator::validateColonPlacement() const {
         char previousToken = getPrecedingNonNewLineTokens(positionOfColon, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfColon, 3);
 
-        if((lastPositionOfClosedBrace > lastPositionOfOpenBrace || lastPositionOfOpenBracket > lastPositionOfOpenBrace)
-            && lastPositionOfOpenBracket > lastPositionOfClosedBracket) {
-
-            String message = "Out of place colon at row ";
+        if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
+            String message = "Colon is in place of a comma at row ";
             message += getRowPositionOfToken(positionOfColon);
 
             throw InvalidJsonSyntax(message);
         }
 
-        if(previousToken != '\"' || (tokenThreePositionsBack != '{' && tokenThreePositionsBack != ',')) {
+        if(validTokensPrecedingColonInJsonObject(previousToken, tokenThreePositionsBack)) {
             String message = "Out of place colon at row ";
             message += getRowPositionOfToken(positionOfColon);
 
@@ -310,18 +369,12 @@ void JsonValidator::validateCommaPlacement() const {
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfComma);
         long long lastPositionOfClosedBracket = getLastPositionOfToken(']', positionOfComma);
 
-        unsigned openBracesBeforeComma = getTokenCount('{', positionOfComma);
-        unsigned closedBracesBeforeComma = getTokenCount('{', positionOfComma);
-        unsigned openBracketsBeforeComma = getTokenCount('[', positionOfComma);
-        unsigned closedBracketsBeforeComma = getTokenCount(']', positionOfComma);
-
         char previousToken = getPrecedingNonNewLineTokens(positionOfComma, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfComma, 3);
 
-        if((lastPositionOfClosedBracket > lastPositionOfOpenBracket || lastPositionOfOpenBrace > lastPositionOfOpenBracket)
-           && lastPositionOfOpenBrace > lastPositionOfClosedBrace) {
+        if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
 
-            if(tokenThreePositionsBack == '{' || tokenThreePositionsBack == ',') {
+            if(validTokensPrecedingCommaInJsonObject(previousToken, tokenThreePositionsBack)) {
                 String message = "Comma is in place of a colon at row ";
                 message += getRowPositionOfToken(positionOfComma);
 
@@ -329,14 +382,7 @@ void JsonValidator::validateCommaPlacement() const {
             }
         }
 
-        if(openBracesBeforeComma == closedBracesBeforeComma && openBracketsBeforeComma == closedBracketsBeforeComma) {
-            String message = "Comma is out of any object or array at row ";
-            message += getRowPositionOfToken(positionOfComma);
-
-            throw InvalidJsonSyntax(message);
-        }
-
-        if(previousToken != '\"' && previousToken != '}' && previousToken != ']') {
+        if(validTokensPrecedingCommaInJsonArray(previousToken)) {
             String message = "Out of place comma at row ";
             message += getRowPositionOfToken(positionOfComma);
 
