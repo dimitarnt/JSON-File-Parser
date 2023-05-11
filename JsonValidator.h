@@ -16,6 +16,7 @@ private:
     long long getPositionOfToken(char token, unsigned timesMet) const;
     long long getLastPositionOfToken(char token, unsigned fromIndex) const;
     char getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const;
+    char getNextNonNewLineToken(unsigned index) const;
     unsigned getRowPositionOfToken(unsigned index) const;
 
     static bool tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
@@ -23,27 +24,39 @@ private:
     static bool tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                         long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket);
 
-    static bool validTokenBeforeOpenBrace(char token) ;
-    static bool validTokenBeforeClosedBrace(char token);
+    static bool validTokenBeforeOpenBrace(char token);
+    static bool validTokenBeforeClosedBrace(char previousToken, char tokenThreePositionsBack);
     static bool validTokenBeforeOpenBracket(char token);
     static bool validTokenBeforeClosedBracket(char token);
 
-    static bool validTokenBeforeQuotationMark(char token);
-    static bool validTokensPrecedingColonInJsonObject(char token, char tokenThreePositionsBack);
-    static bool validTokensPrecedingCommaInJsonObject(char token, char tokenThreePositionsBack);
+    static bool validTokenBeforeDigitInJsonObject(char token);
+    static bool validTokenBeforeDigitInJsonArray(char token);
+
+    static bool validZeroPlacementInJsonObject(char previousToken, char nextToken);
+    static bool validZeroPlacementInJsonArray(char previousToken, char nextToken);
+
+    static bool validTokenBeforeMinusInJsonObject(char previousToken, char nextToken);
+    static bool validTokenBeforeMinusInJsonArray(char previousToken, char nextToken);
+    static bool validTokenBeforeDot(char previousToken, char nextToken);
+
+    static bool validTokenBeforeValueKeywordInJsonObject(char token);
+    static bool validTokenBeforeValueKeywordInJsonArray(char token);
+
+    static bool validTokenBeforeQuotationMark(char previousToken, char tokenTwoPositionsBack);
+    static bool validTokensPrecedingColonInJsonObject(char previousToken, char tokenThreePositionsBack);
+    static bool validTokensPrecedingCommaInJsonObject(char previousToken, char tokenThreePositionsBack);
     static bool validTokensPrecedingCommaInJsonArray(char token);
-
-    static bool validTokenBeforeDigit(char token);
-    static bool validTokenBeforeDot(char token);
-
-    static bool validTokenBeforeBoolCharacter(char token);
-    static bool validTokenBeforeNullCharacter(char token);
 
     void validateBraceMatching() const;
     void validateBracePlacement() const;
 
     void validateBracketMatching() const;
     void validateBracketPlacement() const;
+
+    void validateDigitPlacement() const;
+    void validateDotPlacement() const;
+    void validateMinusPlacement() const;
+    void validateValueKeywordPlacement() const;
 
     void validateQuotationMarkPlacement() const;
     void validateColonPlacement() const;
