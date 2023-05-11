@@ -16,7 +16,6 @@ void JsonValidator::setTokens(std::ifstream& in) {
 
     while (true) {
         char currentSymbol = (char) in.get();
-        std::cout << currentSymbol;
 
         if (in.eof()) {
             break;
