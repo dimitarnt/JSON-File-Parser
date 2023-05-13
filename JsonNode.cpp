@@ -30,10 +30,15 @@ String JsonNode::parseValue(std::ifstream& in) const {
             in.get();
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, '\"');
 
-            do {
-                currentChar = (char)in.get();
+            while(true) {
+                currentChar = (char)in.peek();
 
-            } while(currentChar != ':' && currentChar != ',' && currentChar != '}' && currentChar != ']');
+                if(currentChar == ':' || currentChar == ',' || currentChar == '}' || currentChar == ']') {
+                    break;
+                }
+
+                in.get();
+            }
 
             return result;
 
