@@ -14,10 +14,6 @@ unsigned getCharCountFromFile(std::ifstream& in, char symbol) {
     unsigned currentPosition = in.tellg();
     in.seekg(0, std::ios::beg);
 
-    if (!in.is_open()) {
-        return 0;
-    }
-
     unsigned count = 0;
 
     while (true) {
@@ -45,10 +41,6 @@ unsigned getCharCountFromFile(std::ifstream& in, char symbol, unsigned untilPosi
 
     unsigned currentPosition = in.tellg();
     in.seekg(0, std::ios::beg);
-
-    if (!in.is_open()) {
-        return 0;
-    }
 
     unsigned count = 0;
 
@@ -80,12 +72,38 @@ unsigned getLinesCount(std::ifstream& in, unsigned untilPosition) {
     return getCharCountFromFile(in, '\n', untilPosition) + 1;
 }
 
-void getLineForString(std::ifstream& in, String& str, unsigned bufferSize, char delimiter) {
+void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter) {
     char currentChar = 0;
-    in.get(currentChar);
 
-    for(unsigned i = 1; i < bufferSize || currentChar == delimiter; ++i) {
-        str += currentChar;
+    for(unsigned i = 1; i < bufferSize && currentChar != delimiter; ++i) {
+        if(in.peek() == delimiter) {
+            return;
+        }
+
         in.get(currentChar);
+        str += currentChar;
+
+        if(in.eof()) {
+            return;
+        }
+    }
+}
+
+void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter1, char delimiter2, char delimiter3) {
+    char currentChar = 0;
+
+    for(unsigned i = 1; i < bufferSize && currentChar != delimiter1 && currentChar != delimiter2 && currentChar != delimiter3; ++i) {
+        currentChar = (char)in.peek();
+
+        if(currentChar == delimiter1 || currentChar == delimiter2 || currentChar == delimiter3) {
+            return;
+        }
+
+        in.get();
+        str += currentChar;
+
+        if(in.eof()) {
+            return;
+        }
     }
 }
