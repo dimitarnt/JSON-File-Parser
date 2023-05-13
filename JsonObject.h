@@ -7,6 +7,7 @@ class JsonObject : public JsonNode {
 private:
     Vector<JsonNode*> _jsonNodeCollection;
     Vector<String> _correspondingKeys;
+    unsigned _nestingLevel;
 
     void copyFrom(const JsonObject& other);
     void moveFrom(JsonObject&& other);
@@ -14,7 +15,7 @@ private:
 
 public:
     JsonObject() = delete;
-    explicit JsonObject(std::ifstream& in);
+    explicit JsonObject(std::ifstream& in, unsigned nestingLevel);
 
     JsonObject(const JsonObject& other);
     JsonObject(JsonObject&& other) noexcept;
@@ -22,7 +23,7 @@ public:
     JsonObject& operator=(JsonObject&& other) noexcept;
     ~JsonObject() override;
 
-    void setData(std::ifstream& in);
+    void print() const override;
 
     JsonNode* clone() const override;
 };
