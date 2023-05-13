@@ -225,7 +225,7 @@ String& String::operator+=(const String& other) {
 }
 
 String& String::operator+=(char symbol) {
-    String symbolStr = " ";
+    String symbolStr(" ");
     symbolStr[0] = symbol;
 
     return operator+=(symbolStr);
@@ -276,7 +276,7 @@ String operator+(const String& lhs, const String& rhs) {
 }
 
 String operator+(const String& lhs, char symbol) {
-    String symbolStr = " ";
+    String symbolStr(" ");
     symbolStr[0] = symbol;
 
     return operator+(lhs, symbolStr);
@@ -299,6 +299,20 @@ String operator+(const String& lhs, unsigned number) {
     size_t convertedNumber = number;
 
     return operator+(lhs, convertedNumber);
+}
+
+void String::removeCharacterFromString(char charToRemove) {
+    String temp;
+
+    for(size_t i = 0; i < getLength(); ++i) {
+        if(getData()[i] == charToRemove) {
+            continue;
+        }
+
+        temp[i] = getData()[i];
+    }
+
+    operator=(std::move(temp));
 }
 
 std::ostream& operator<<(std::ostream& os, const String& str) {

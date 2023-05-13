@@ -32,7 +32,7 @@ class String {
 
 public:
     String();
-    String(const char* data);
+    explicit String(const char* data);
     String(const String& other);
     String(String&& other) noexcept ;
     String& operator=(const String& other);
@@ -48,6 +48,8 @@ public:
     String& operator+=(char symbol);
     String& operator+=(size_t number);
     String& operator+=(unsigned number);
+
+    void removeCharacterFromString(char charToRemove);
 
     char& operator[](size_t index);
     char operator[](size_t index) const;
