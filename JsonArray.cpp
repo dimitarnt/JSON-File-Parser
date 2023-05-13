@@ -3,8 +3,79 @@
 #include "JsonValue.h"
 #include "fileFunctions.h"
 
-JsonArray::JsonArray(std::ifstream& in) {
-    setData(in);
+JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
+    _nestingLevel = nestingLevel;
+
+    while(true) {
+        char currentChar = (char)in.peek();
+
+        if(currentChar == '\"') {
+
+            JsonValue matchingValue(in, true);
+            _jsonNodeCollection.pushBack(matchingValue.clone());
+
+            currentChar = (char)in.peek();
+
+            if(currentChar == ']') {
+                in.get();
+                return;
+            }
+        }
+
+        if(currentChar == '-' || (currentChar >= '0' && currentChar <= '9')
+           || currentChar == 't' || currentChar == 'f' || currentChar == 'n') {
+
+            JsonValue matchingValue(in, false);
+            _jsonNodeCollection.pushBack(matchingValue.clone());
+
+            currentChar = (char)in.peek();
+
+            if(currentChar == ']') {
+                in.get();
+                return;
+            }
+        }
+
+        if(currentChar == '{') {
+            in.get();
+
+            JsonObject matchingObject(in, _nestingLevel + 1);
+            _jsonNodeCollection.pushBack(matchingObject.clone());
+
+            while(true) {
+                currentChar = (char)in.get();
+
+                if(currentChar == ',') {
+                    break;
+                }
+                if(currentChar == ']') {
+                    return;
+                }
+            }
+            continue;
+        }
+
+        if(currentChar == '[') {
+            in.get();
+
+            JsonArray matchingArray(in, _nestingLevel + 1);
+            _jsonNodeCollection.pushBack(matchingArray.clone());
+
+            while(true) {
+                currentChar = (char)in.get();
+
+                if(currentChar == ',') {
+                    break;
+                }
+                if(currentChar == ']') {
+                    return;
+                }
+            }
+            continue;
+        }
+
+        in.get();
+    }
 }
 
 JsonArray::JsonArray(const JsonArray& other) {
@@ -39,6 +110,7 @@ JsonArray::~JsonArray() {
 
 void JsonArray::copyFrom(const JsonArray& other) {
     this->_jsonNodeCollection = other._jsonNodeCollection;
+    this->_nestingLevel = other._nestingLevel;
 
     for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
         this->_jsonNodeCollection[i] = other._jsonNodeCollection[i]->clone();
@@ -47,6 +119,7 @@ void JsonArray::copyFrom(const JsonArray& other) {
 
 void JsonArray::moveFrom(JsonArray&& other) {
     this->_jsonNodeCollection = other._jsonNodeCollection;
+    this->_nestingLevel = other._nestingLevel;
 
     other._jsonNodeCollection.clear();
 }
@@ -58,40 +131,27 @@ void JsonArray::free() {
     }
 }
 
-void JsonArray::setData(std::ifstream& in) {
+void JsonArray::print() const {
+    size_t numberOfElementsInArray = _jsonNodeCollection.getSize();
 
-    while(true) {
-        char currentChar = (char)in.peek();
+    std::cout << '[' << '\n';
 
-        if(currentChar == '\"' || currentChar == '-' || (currentChar >= '0' && currentChar <= '9')
-           || currentChar == 't' || currentChar == 'f' || currentChar == 'n') {
+    for(unsigned i = 0; i < numberOfElementsInArray; ++i) {
 
-            JsonValue matchingValue(in);
-            _jsonNodeCollection.pushBack(matchingValue.clone());
+        printIndentation(_nestingLevel);
 
-        } else if(currentChar == '{') {
+        _jsonNodeCollection[i]->print();
 
-            in.get();
+        if(i == numberOfElementsInArray - 1) {
+            std::cout << '\n';
 
-            JsonObject matchingObject(in);
-            _jsonNodeCollection.pushBack(matchingObject.clone());
+            printIndentation(_nestingLevel - 1);
 
-        } else if(currentChar == '[') {
-
-            in.get();
-
-            JsonArray matchingArray(in);
-            _jsonNodeCollection.pushBack(matchingArray.clone());
-
-        } else if(currentChar == ']') {
-
+            std::cout << ']';
             return;
-
-        } else {
-
-            in.get();
         }
 
+        std::cout << ',' << '\n';
     }
 }
 

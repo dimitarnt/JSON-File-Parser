@@ -5,6 +5,7 @@
 class JsonArray : public JsonNode {
 private:
     Vector<JsonNode*> _jsonNodeCollection;
+    unsigned _nestingLevel;
 
     void copyFrom(const JsonArray& other);
     void moveFrom(JsonArray&& other);
@@ -12,7 +13,7 @@ private:
 
 public:
     JsonArray() = delete;
-    explicit JsonArray(std::ifstream& in);
+    explicit JsonArray(std::ifstream& in, unsigned nestingLevel);
 
     JsonArray(const JsonArray& other);
     JsonArray(JsonArray&& other) noexcept;
@@ -20,7 +21,7 @@ public:
     JsonArray& operator=(JsonArray&& other) noexcept;
     ~JsonArray() override;
 
-    void setData(std::ifstream& in);
+    void print() const override;
 
     JsonNode* clone() const override;
     
