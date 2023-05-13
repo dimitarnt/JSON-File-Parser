@@ -24,6 +24,9 @@ String JsonNode::parseValue(std::ifstream& in) const {
         case 'n':
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, ',', '}', ']');
 
+            result.removeCharacterFromString('\t');
+            result.removeCharacterFromString(' ');
+
             return result;
 
         case '\"':
