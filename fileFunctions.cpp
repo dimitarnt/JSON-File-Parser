@@ -75,12 +75,14 @@ unsigned getLinesCount(std::ifstream& in, unsigned untilPosition) {
 void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter) {
     char currentChar = 0;
 
-    for(unsigned i = 1; i < bufferSize && currentChar != delimiter; ++i) {
-        if(in.peek() == delimiter) {
+    for(unsigned i = 1; i < bufferSize; ++i) {
+        currentChar = (char)in.peek();
+
+        if(currentChar == delimiter || currentChar == '\n') {
             return;
         }
 
-        in.get(currentChar);
+        in.get();
         str += currentChar;
 
         if(in.eof()) {
@@ -92,10 +94,10 @@ void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned buffer
 void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter1, char delimiter2, char delimiter3) {
     char currentChar = 0;
 
-    for(unsigned i = 1; i < bufferSize && currentChar != delimiter1 && currentChar != delimiter2 && currentChar != delimiter3; ++i) {
+    for(unsigned i = 1; i < bufferSize; ++i) {
         currentChar = (char)in.peek();
 
-        if(currentChar == delimiter1 || currentChar == delimiter2 || currentChar == delimiter3) {
+        if(currentChar == delimiter1 || currentChar == delimiter2 || currentChar == delimiter3 || currentChar == '\n') {
             return;
         }
 
