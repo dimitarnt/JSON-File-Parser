@@ -49,3 +49,13 @@ String JsonNode::parseValue(std::ifstream& in) const {
             throw std::logic_error("Json file not validated or wrong usage of function");
     }
 }
+
+void JsonNode::printIndentation(unsigned nestingLevel) {
+
+    for(unsigned i = 0; i < nestingLevel; ++i) {
+
+        for(unsigned j = 0; j < NUMBER_OF_INDENTATION_SPACES; ++j) {
+            std::cout << ' ';
+        }
+    }
+}
