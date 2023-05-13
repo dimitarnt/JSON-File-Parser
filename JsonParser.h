@@ -14,4 +14,6 @@ public:
 
     void setFile(const char* fileName);
 
+    void print() const;
+
 };
