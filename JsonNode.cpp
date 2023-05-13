@@ -23,14 +23,12 @@ String JsonNode::parseValue(std::ifstream& in) const {
         case 'f':
         case 'n':
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, ',', '}', ']');
-            std::cout << result;
 
             return result;
 
         case '\"':
             in.get();
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, '\"');
-            std::cout << result;
 
             do {
                 currentChar = (char)in.get();
