@@ -73,8 +73,8 @@ Vector<T>::Vector(Vector<T>&& other) noexcept {
 template <typename T>
 Vector<T>& Vector<T>::operator=(const Vector& other) {
     if (this != &other) {
-        free();
         copyFrom(other);
+        free();
     }
 
     return *this;
@@ -83,8 +83,8 @@ Vector<T>& Vector<T>::operator=(const Vector& other) {
 template <typename T>
 Vector<T>& Vector<T>::operator=(Vector<T>&& other) noexcept {
     if (this != &other) {
-        free();
         moveFrom(std::move(other));
+        free();
     }
 
     return *this;
