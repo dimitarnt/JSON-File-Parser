@@ -90,16 +90,21 @@ JsonObject::JsonObject(std::ifstream& in, unsigned nestingLevel) {
     }
 }
 
-JsonObject::JsonObject(const JsonObject& other) {
+JsonObject::JsonObject(const JsonObject& other) : JsonNode(other), _jsonNodeCollection(other._jsonNodeCollection),
+                                                  _correspondingKeys(other._correspondingKeys) {
     copyFrom(other);
 }
 
-JsonObject::JsonObject(JsonObject&& other) noexcept {
+JsonObject::JsonObject(JsonObject&& other) noexcept : JsonNode(other), _jsonNodeCollection(std::move(other._jsonNodeCollection)),
+                                                      _correspondingKeys(std::move(other._correspondingKeys)) {
     moveFrom(std::move(other));
 }
 
 JsonObject& JsonObject::operator=(const JsonObject& other) {
     if(this != &other) {
+        JsonNode::operator=(other);
+        _jsonNodeCollection = other._jsonNodeCollection;
+        _correspondingKeys = other._correspondingKeys;
         copyFrom(other);
         free();
     }
@@ -109,6 +114,9 @@ JsonObject& JsonObject::operator=(const JsonObject& other) {
 
 JsonObject& JsonObject::operator=(JsonObject&& other) noexcept {
     if(this != &other) {
+        JsonNode::operator=(other);
+        _jsonNodeCollection = std::move(other._jsonNodeCollection);
+        _correspondingKeys = std::move(other._correspondingKeys);
         moveFrom(std::move(other));
         free();
     }
@@ -121,8 +129,6 @@ JsonObject::~JsonObject() {
 }
 
 void JsonObject::copyFrom(const JsonObject& other) {
-    this->_jsonNodeCollection = other._jsonNodeCollection;
-    this->_correspondingKeys = other._correspondingKeys;
     this->_nestingLevel = other._nestingLevel;
 
     for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
@@ -131,12 +137,12 @@ void JsonObject::copyFrom(const JsonObject& other) {
 }
 
 void JsonObject::moveFrom(JsonObject&& other) {
-    this->_jsonNodeCollection = other._jsonNodeCollection;
-    this->_correspondingKeys = other._correspondingKeys;
     this->_nestingLevel = other._nestingLevel;
 
-    other._jsonNodeCollection.clear();
-    other._correspondingKeys.clear();
+    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
+        this->_jsonNodeCollection[i] = other._jsonNodeCollection[i];
+        other._jsonNodeCollection[i] = nullptr;
+    }
 }
 
 void JsonObject::free() {
@@ -153,16 +159,16 @@ void JsonObject::print() const {
 
     for(unsigned i = 0; i < numberOfPairsInObject; ++i) {
 
-        printIndentation(_nestingLevel);
+        printIndentation(_nestingLevel + 1);
 
-        std::cout << '\"' << _correspondingKeys[i] << '\"' << ':';
+        std::cout << '\"' << _correspondingKeys[i] << '\"' << ':' << ' ';
 
         _jsonNodeCollection[i]->print();
 
         if(i == numberOfPairsInObject - 1) {
             std::cout << '\n';
 
-            printIndentation(_nestingLevel - 1);
+            printIndentation(_nestingLevel);
 
             std::cout << '}';
             return;
