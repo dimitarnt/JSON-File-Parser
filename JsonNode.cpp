@@ -22,10 +22,17 @@ String JsonNode::parseValue(std::ifstream& in) const {
         case 't':
         case 'f':
         case 'n':
-            getCharactersUntilDelimiter(in, result, BUFFER_SIZE, ',', '}', ']');
+            getCharactersUntilDelimiter(in, result, BUFFER_SIZE, ' ', '\t', ',', '}', ']');
 
-            result.removeCharacterFromString('\t');
-            result.removeCharacterFromString(' ');
+            while(true) {
+                currentChar = (char)in.peek();
+
+                if(currentChar == ':' || currentChar == ',' || currentChar == '}' || currentChar == ']') {
+                    break;
+                }
+
+                in.get();
+            }
 
             return result;
 
