@@ -11,6 +11,10 @@ private:
     void assertIndex(unsigned index) const;
 
     void setTokens(std::ifstream& in);
+    static void throwOutOfPlaceCharacterException(std::ifstream& in);
+    static void validateBoolBuildingInterception(std::ifstream& in, unsigned buildingOfTrueKeyword,
+                                                 unsigned buildingOfFalseKeyword, unsigned buildingOfNullKeyword);
+    static void validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt);
 
     unsigned getTokenCount(char token, unsigned untilIndex) const;
     long long getPositionOfToken(char token, unsigned timesMet) const;

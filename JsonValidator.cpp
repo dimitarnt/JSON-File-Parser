@@ -10,6 +10,7 @@ void JsonValidator::assertIndex(unsigned index) const {
 
 void JsonValidator::setTokens(std::ifstream& in) {
     bool stringHasNotBeenClosed = false;
+    bool numberIsBeingBuilt = false;
     unsigned buildingOfKeywordTrue = 0;
     unsigned buildingOfKeywordFalse = 0;
     unsigned buildingOfKeywordNull = 0;
@@ -32,113 +33,110 @@ void JsonValidator::setTokens(std::ifstream& in) {
                 break;
 
             case 't':
-                if(buildingOfKeywordTrue != 0) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
 
-                    throw InvalidJsonSyntax(message);
+                if(buildingOfKeywordTrue != 0) {
+                    throwOutOfPlaceCharacterException(in);
                 }
                 buildingOfKeywordTrue = 1;
                 _tokens += currentSymbol;
                 break;
 
             case 'r':
-                if(buildingOfKeywordTrue != 1) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
 
-                    throw InvalidJsonSyntax(message);
+                if(buildingOfKeywordTrue != 1) {
+                    throwOutOfPlaceCharacterException(in);
                 }
                 buildingOfKeywordTrue = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'u':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(!(buildingOfKeywordTrue == 2 || buildingOfKeywordNull == 1)) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordTrue == 2 ? buildingOfKeywordTrue = 3 : buildingOfKeywordNull = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'e':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(!(buildingOfKeywordTrue == 3 || buildingOfKeywordFalse == 4)) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordTrue == 3 ? buildingOfKeywordTrue = 0 : buildingOfKeywordFalse = 0;
                 _tokens += currentSymbol;
                 break;
 
             case 'f':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(buildingOfKeywordFalse != 0) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordFalse = 1;
                 _tokens += currentSymbol;
                 break;
 
             case 'a':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(buildingOfKeywordFalse != 1) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordFalse = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'l':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(!(buildingOfKeywordFalse == 2 || buildingOfKeywordNull == 2 || buildingOfKeywordNull == 3)) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordFalse == 2 ? buildingOfKeywordFalse = 3 :
                         (buildingOfKeywordNull == 2 ? buildingOfKeywordNull = 3 : buildingOfKeywordNull = 0);
                 _tokens += currentSymbol;
                 break;
 
             case 's':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(buildingOfKeywordFalse != 3) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordFalse = 4;
                 _tokens += currentSymbol;
                 break;
 
             case 'n':
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                
                 if(buildingOfKeywordNull != 0) {
-                    String message("Out of place character at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
+                    throwOutOfPlaceCharacterException(in);
                 }
+                
                 buildingOfKeywordNull = 1;
                 _tokens += currentSymbol;
                 break;
 
-            case '{':
-            case '}':
+            case '-':
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
 
-            case '[':
-            case ']':
-
-            case ':':
-            case ',':
+                numberIsBeingBuilt = true;
+                _tokens += currentSymbol;
+                break;
 
             case '0':
             case '1':
@@ -150,30 +148,44 @@ void JsonValidator::setTokens(std::ifstream& in) {
             case '7':
             case '8':
             case '9':
-            case '-':
             case '.':
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+
+                numberIsBeingBuilt = true;
+                _tokens += currentSymbol;
+                break;
+
+            case '{':
+            case '}':
+
+            case '[':
+            case ']':
+
+            case ':':
+            case ',':
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+
+                numberIsBeingBuilt = false;
+                _tokens += currentSymbol;
+                break;
 
             case '\n':
-                if(buildingOfKeywordTrue != 0 || buildingOfKeywordFalse != 0 || buildingOfKeywordNull != 0) {
-                    String message("Unfinished bool keyword at row ");
-                    message += getLinesCount(in, in.tellg());
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
 
-                    throw InvalidJsonSyntax(message);
-                }
                 _tokens += currentSymbol;
                 break;
 
             case ' ':
             case '\t':
-                if(buildingOfKeywordTrue != 0 || buildingOfKeywordFalse != 0 || buildingOfKeywordNull != 0) {
-                    String message("Unfinished bool keyword at row ");
-                    message += getLinesCount(in, in.tellg());
-
-                    throw InvalidJsonSyntax(message);
-                }
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
                 break;
 
             default:
+                validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
+                validateNumberBuildingInterception(in, numberIsBeingBuilt);
+
                 String message("Non-token character is out of quotation marks at row ");
                 message += getLinesCount(in, in.tellg());
 
@@ -183,6 +195,35 @@ void JsonValidator::setTokens(std::ifstream& in) {
     in.clear();
 
     _tokenCount = _tokens.getLength();
+}
+
+void JsonValidator::throwOutOfPlaceCharacterException(std::ifstream& in) {
+    String message("Out of place character at row ");
+    message += getLinesCount(in, in.tellg());
+
+    throw InvalidJsonSyntax(message);
+}
+
+void JsonValidator::validateBoolBuildingInterception(std::ifstream& in, unsigned buildingOfKeywordTrue,
+                                                     unsigned buildingOfKeywordFalse, unsigned buildingOfKeywordNull) {
+
+    if(buildingOfKeywordTrue != 0 || buildingOfKeywordFalse != 0 || buildingOfKeywordNull != 0) {
+        String message("Unfinished bool keyword at row ");
+        message += getLinesCount(in, in.tellg());
+
+        throw InvalidJsonSyntax(message);
+    }
+}
+
+void JsonValidator::validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt) {
+    char nextToken = (char)in.peek();
+
+    if(numberIsBeingBuilt && ((nextToken >= '0' && nextToken <= '9') || nextToken == '.')) {
+        String message("Disallowed character in number at row ");
+        message += getLinesCount(in, in.tellg());
+
+        throw InvalidJsonSyntax(message);
+    }
 }
 
 unsigned JsonValidator::getTokenCount(char token, unsigned untilIndex) const {
