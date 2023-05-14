@@ -301,20 +301,6 @@ String operator+(const String& lhs, unsigned number) {
     return operator+(lhs, convertedNumber);
 }
 
-void String::removeCharacterFromString(char charToRemove) {
-    String temp;
-
-    for(size_t i = 0; i < getLength(); ++i) {
-        if(getData()[i] == charToRemove) {
-            continue;
-        }
-
-        temp[i] = getData()[i];
-    }
-
-    operator=(std::move(temp));
-}
-
 std::ostream& operator<<(std::ostream& os, const String& str) {
 
     return os << str.getData();

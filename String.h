@@ -49,8 +49,6 @@ public:
     String& operator+=(size_t number);
     String& operator+=(unsigned number);
 
-    void removeCharacterFromString(char charToRemove);
-
     char& operator[](size_t index);
     char operator[](size_t index) const;
 
