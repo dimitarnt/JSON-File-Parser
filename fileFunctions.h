@@ -11,4 +11,5 @@ unsigned getLinesCount(std::ifstream& in);
 unsigned getLinesCount(std::ifstream& in, unsigned untilPosition);
 
 void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter);
-void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter1, char delimiter2, char delimiter3);
+void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize,
+                                 char delimiter1, char delimiter2, char delimiter3, char delimiter4, char delimiter5);

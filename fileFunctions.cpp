@@ -94,13 +94,15 @@ void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned buffer
     }
 }
 
-void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize, char delimiter1, char delimiter2, char delimiter3) {
+void getCharactersUntilDelimiter(std::ifstream& in, String& str, unsigned bufferSize,
+                                 char delimiter1, char delimiter2, char delimiter3, char delimiter4, char delimiter5) {
     char currentChar = 0;
 
     for(unsigned i = 1; i < bufferSize; ++i) {
         currentChar = (char)in.peek();
 
-        if(currentChar == delimiter1 || currentChar == delimiter2 || currentChar == delimiter3) {
+        if(currentChar == delimiter1 || currentChar == delimiter2 || currentChar == delimiter3
+            || currentChar == delimiter4 || currentChar == delimiter5) {
             return;
         }
 
