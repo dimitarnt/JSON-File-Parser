@@ -78,16 +78,18 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
     }
 }
 
-JsonArray::JsonArray(const JsonArray& other) {
+JsonArray::JsonArray(const JsonArray& other) : JsonNode(other), _jsonNodeCollection(other._jsonNodeCollection) {
     copyFrom(other);
 }
 
-JsonArray::JsonArray(JsonArray&& other) noexcept {
+JsonArray::JsonArray(JsonArray&& other) noexcept : JsonNode(other), _jsonNodeCollection(std::move(other._jsonNodeCollection)) {
     moveFrom(std::move(other));
 }
 
 JsonArray& JsonArray::operator=(const JsonArray& other) {
     if(this != &other) {
+        JsonNode::operator=(other);
+        _jsonNodeCollection = other._jsonNodeCollection;
         copyFrom(other);
         free();
     }
@@ -97,6 +99,8 @@ JsonArray& JsonArray::operator=(const JsonArray& other) {
 
 JsonArray& JsonArray::operator=(JsonArray&& other) noexcept {
     if(this != &other) {
+        JsonNode::operator=(other);
+        _jsonNodeCollection = std::move(other._jsonNodeCollection);
         moveFrom(std::move(other));
         free();
     }
@@ -109,7 +113,6 @@ JsonArray::~JsonArray() {
 }
 
 void JsonArray::copyFrom(const JsonArray& other) {
-    this->_jsonNodeCollection = other._jsonNodeCollection;
     this->_nestingLevel = other._nestingLevel;
 
     for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
@@ -118,10 +121,12 @@ void JsonArray::copyFrom(const JsonArray& other) {
 }
 
 void JsonArray::moveFrom(JsonArray&& other) {
-    this->_jsonNodeCollection = other._jsonNodeCollection;
     this->_nestingLevel = other._nestingLevel;
 
-    other._jsonNodeCollection.clear();
+    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
+        this->_jsonNodeCollection[i] = other._jsonNodeCollection[i];
+        other._jsonNodeCollection[i] = nullptr;
+    }
 }
 
 void JsonArray::free() {
@@ -138,14 +143,14 @@ void JsonArray::print() const {
 
     for(unsigned i = 0; i < numberOfElementsInArray; ++i) {
 
-        printIndentation(_nestingLevel);
+        printIndentation(_nestingLevel + 1);
 
         _jsonNodeCollection[i]->print();
 
         if(i == numberOfElementsInArray - 1) {
             std::cout << '\n';
 
-            printIndentation(_nestingLevel - 1);
+            printIndentation(_nestingLevel);
 
             std::cout << ']';
             return;
