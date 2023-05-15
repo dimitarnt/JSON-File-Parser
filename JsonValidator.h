@@ -1,6 +1,5 @@
 #pragma once
 #include "String.h"
-#include "helperFunctions.h"
 #include <fstream>
 
 class JsonValidator {
@@ -16,7 +15,7 @@ private:
                                                  unsigned buildingOfFalseKeyword, unsigned buildingOfNullKeyword);
     static void validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt);
 
-    unsigned getTokenCount(char token, unsigned untilIndex) const;
+    unsigned getSpecificTokenCount(char token) const;
     long long getPositionOfToken(char token, unsigned timesMet) const;
     long long getLastPositionOfToken(char token, unsigned fromIndex) const;
     char getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const;
