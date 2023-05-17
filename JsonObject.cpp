@@ -18,7 +18,7 @@ JsonObject::JsonObject(std::ifstream& in, unsigned nestingLevel) {
 
             if (currentChar == '\"') {
 
-                _jsonNodeCollection.addJsonValue(in, true);
+                _jsonNodeCollection.addJsonString(in);
 
                 in.get(currentChar);
 
@@ -33,7 +33,7 @@ JsonObject::JsonObject(std::ifstream& in, unsigned nestingLevel) {
             if (currentChar == '-' || (currentChar >= '0' && currentChar <= '9')
                 || currentChar == 't' || currentChar == 'f' || currentChar == 'n') {
 
-                _jsonNodeCollection.addJsonValue(in, false);
+                _jsonNodeCollection.addJsonValue(in);
 
                 in.get(currentChar);
 
