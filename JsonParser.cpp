@@ -17,51 +17,6 @@ JsonParser::JsonParser(const char* fileName) {
     setFile(fileName);
 }
 
-JsonParser::JsonParser(const JsonParser& other) : _fileName(other._fileName) {
-    copyFrom(other);
-}
-
-JsonParser::JsonParser(JsonParser&& other) noexcept : _fileName(std::move(other._fileName)) {
-    moveFrom(std::move(other));
-}
-
-JsonParser& JsonParser::operator=(const JsonParser& other) {
-    if(this != &other) {
-        _fileName = other._fileName;
-        copyFrom(other);
-        free();
-    }
-
-    return *this;
-}
-
-JsonParser& JsonParser::operator=(JsonParser&& other) noexcept {
-    if(this != &other) {
-        _fileName = std::move(other._fileName);
-        moveFrom(std::move(other));
-        free();
-    }
-
-    return *this;
-}
-
-JsonParser::~JsonParser() {
-    free();
-}
-
-void JsonParser::copyFrom(const JsonParser& other) {
-    _startingNode = other._startingNode->clone();
-}
-
-void JsonParser::moveFrom(JsonParser&& other) {
-    _startingNode = other._startingNode;
-    other._startingNode = nullptr;
-}
-
-void JsonParser::free() {
-    delete _startingNode;
-}
-
 void JsonParser::setFile(const char* fileName) {
     assertJsonFileName(fileName);
 
@@ -78,16 +33,14 @@ void JsonParser::setFile(const char* fileName) {
     char firstChar = (char)in.get();
 
     if(firstChar == '{') {
-        JsonObject startingObject(in, 0);
-        _startingNode = startingObject.clone();
+        _startingNode.addJsonObject(in, 0);
     }
 
     if(firstChar == '[') {
-        JsonArray startingArray(in, 0);
-        _startingNode = startingArray.clone();
+        _startingNode.addJsonArray(in, 0);
     }
 }
 
 void JsonParser::print() const {
-    _startingNode->print();
+    _startingNode[0]->print();
 }
