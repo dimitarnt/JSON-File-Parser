@@ -19,7 +19,11 @@ public:
     JsonNodeCollection& operator=(JsonNodeCollection&& other) noexcept;
     ~JsonNodeCollection();
 
+    unsigned getSize() const;
+
     void addJsonObject(std::ifstream& in, unsigned nestingLevel);
     void addJsonArray(std::ifstream& in, unsigned nestingLevel);
     void addJsonValue(std::ifstream& in, bool isString);
+
+    const JsonNode* operator[](unsigned index) const;
 };

@@ -41,6 +41,10 @@ void JsonNodeCollection::free() {
     }
 }
 
+unsigned JsonNodeCollection::getSize() const {
+    return _jsonNodes.getSize();
+}
+
 void JsonNodeCollection::addJsonNode(JsonNode* newJsonNode) {
     _jsonNodes.pushBack(newJsonNode);
 }
@@ -55,4 +59,8 @@ void JsonNodeCollection::addJsonArray(std::ifstream& in, unsigned nestingLevel) 
 
 void JsonNodeCollection::addJsonValue(std::ifstream& in, bool isString) {
     addJsonNode(new JsonValue(in, isString));
+}
+
+const JsonNode* JsonNodeCollection::operator[](unsigned index) const {
+    return _jsonNodes[index];
 }
