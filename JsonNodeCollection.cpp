@@ -1,6 +1,7 @@
 #include "JsonNodeCollection.h"
 #include "JsonObject.h"
 #include "JsonArray.h"
+#include "JsonString.h"
 #include "JsonValue.h"
 
 JsonNodeCollection::JsonNodeCollection(const JsonNodeCollection& other) : _jsonNodes(other._jsonNodes) {
@@ -57,8 +58,12 @@ void JsonNodeCollection::addJsonArray(std::ifstream& in, unsigned nestingLevel) 
     addJsonNode(new JsonArray(in, nestingLevel));
 }
 
-void JsonNodeCollection::addJsonValue(std::ifstream& in, bool isString) {
-    addJsonNode(new JsonValue(in, isString));
+void JsonNodeCollection::addJsonString(std::ifstream& in) {
+    addJsonNode(new JsonString(in));
+}
+
+void JsonNodeCollection::addJsonValue(std::ifstream& in) {
+    addJsonNode(new JsonValue(in));
 }
 
 const JsonNode* JsonNodeCollection::operator[](unsigned index) const {

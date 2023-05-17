@@ -23,7 +23,8 @@ public:
 
     void addJsonObject(std::ifstream& in, unsigned nestingLevel);
     void addJsonArray(std::ifstream& in, unsigned nestingLevel);
-    void addJsonValue(std::ifstream& in, bool isString);
+    void addJsonString(std::ifstream& in);
+    void addJsonValue(std::ifstream& in);
 
     const JsonNode* operator[](unsigned index) const;
 };
