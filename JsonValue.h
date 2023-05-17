@@ -5,14 +5,12 @@
 class JsonValue : public JsonNode {
 private:
     String _value;
-    bool _isString;
 
 public:
     JsonValue() = delete;
-    explicit JsonValue(std::ifstream& in, bool isString);
+    explicit JsonValue(std::ifstream& in);
 
     void print() const override;
 
     JsonNode* clone() const override;
-
 };
