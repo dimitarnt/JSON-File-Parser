@@ -11,8 +11,7 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
 
         if(currentChar == '\"') {
 
-            JsonValue matchingValue(in, true);
-            _jsonNodeCollection.pushBack(matchingValue.clone());
+            _jsonNodeCollection.addJsonValue(in, true);
 
             currentChar = (char)in.peek();
 
@@ -25,8 +24,7 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
         if(currentChar == '-' || (currentChar >= '0' && currentChar <= '9')
            || currentChar == 't' || currentChar == 'f' || currentChar == 'n') {
 
-            JsonValue matchingValue(in, false);
-            _jsonNodeCollection.pushBack(matchingValue.clone());
+            _jsonNodeCollection.addJsonValue(in, false);
 
             currentChar = (char)in.peek();
 
@@ -39,8 +37,7 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
         if(currentChar == '{') {
             in.get();
 
-            JsonObject matchingObject(in, _nestingLevel + 1);
-            _jsonNodeCollection.pushBack(matchingObject.clone());
+            _jsonNodeCollection.addJsonObject(in, _nestingLevel + 1);
 
             while(true) {
                 currentChar = (char)in.get();
@@ -58,8 +55,7 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
         if(currentChar == '[') {
             in.get();
 
-            JsonArray matchingArray(in, _nestingLevel + 1);
-            _jsonNodeCollection.pushBack(matchingArray.clone());
+           _jsonNodeCollection.addJsonArray(in, _nestingLevel + 1);
 
             while(true) {
                 currentChar = (char)in.get();
@@ -75,64 +71,6 @@ JsonArray::JsonArray(std::ifstream& in, unsigned nestingLevel) {
         }
 
         in.get();
-    }
-}
-
-JsonArray::JsonArray(const JsonArray& other) : JsonNode(other), _jsonNodeCollection(other._jsonNodeCollection) {
-    copyFrom(other);
-}
-
-JsonArray::JsonArray(JsonArray&& other) noexcept : JsonNode(other), _jsonNodeCollection(std::move(other._jsonNodeCollection)) {
-    moveFrom(std::move(other));
-}
-
-JsonArray& JsonArray::operator=(const JsonArray& other) {
-    if(this != &other) {
-        JsonNode::operator=(other);
-        _jsonNodeCollection = other._jsonNodeCollection;
-        copyFrom(other);
-        free();
-    }
-
-    return *this;
-}
-
-JsonArray& JsonArray::operator=(JsonArray&& other) noexcept {
-    if(this != &other) {
-        JsonNode::operator=(other);
-        _jsonNodeCollection = std::move(other._jsonNodeCollection);
-        moveFrom(std::move(other));
-        free();
-    }
-
-    return *this;
-}
-
-JsonArray::~JsonArray() {
-    free();
-}
-
-void JsonArray::copyFrom(const JsonArray& other) {
-    this->_nestingLevel = other._nestingLevel;
-
-    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
-        this->_jsonNodeCollection[i] = other._jsonNodeCollection[i]->clone();
-    }
-}
-
-void JsonArray::moveFrom(JsonArray&& other) {
-    this->_nestingLevel = other._nestingLevel;
-
-    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
-        this->_jsonNodeCollection[i] = other._jsonNodeCollection[i];
-        other._jsonNodeCollection[i] = nullptr;
-    }
-}
-
-void JsonArray::free() {
-
-    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
-        delete _jsonNodeCollection[i];
     }
 }
 

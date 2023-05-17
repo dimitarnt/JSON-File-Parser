@@ -1,28 +1,18 @@
 #pragma once
-#include "Vector.h"
-#include "JsonNode.h"
+#include "Vector.hpp"
+#include "JsonNodeCollection.h"
 
 class JsonArray : public JsonNode {
 private:
-    Vector<JsonNode*> _jsonNodeCollection;
+    JsonNodeCollection _jsonNodeCollection;
     unsigned _nestingLevel;
-
-    void copyFrom(const JsonArray& other);
-    void moveFrom(JsonArray&& other);
-    void free();
 
 public:
     JsonArray() = delete;
-    explicit JsonArray(std::ifstream& in, unsigned nestingLevel);
-
-    JsonArray(const JsonArray& other);
-    JsonArray(JsonArray&& other) noexcept;
-    JsonArray& operator=(const JsonArray& other);
-    JsonArray& operator=(JsonArray&& other) noexcept;
-    ~JsonArray() override;
+    JsonArray(std::ifstream& in, unsigned nestingLevel);
+    ~JsonArray() override = default;
 
     void print() const override;
 
     JsonNode* clone() const override;
-    
 };
