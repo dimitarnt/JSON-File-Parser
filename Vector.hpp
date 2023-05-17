@@ -28,7 +28,7 @@ private:
 
 public:
     Vector();
-    Vector(size_t capacity);
+    explicit Vector(size_t capacity);
     Vector(const Vector& other);
     Vector(Vector&& other) noexcept;
     Vector& operator=(const Vector& other);
@@ -73,8 +73,8 @@ Vector<T>::Vector(Vector<T>&& other) noexcept {
 template <typename T>
 Vector<T>& Vector<T>::operator=(const Vector& other) {
     if (this != &other) {
-        copyFrom(other);
         free();
+        copyFrom(other);
     }
 
     return *this;
@@ -83,8 +83,8 @@ Vector<T>& Vector<T>::operator=(const Vector& other) {
 template <typename T>
 Vector<T>& Vector<T>::operator=(Vector<T>&& other) noexcept {
     if (this != &other) {
-        moveFrom(std::move(other));
         free();
+        moveFrom(std::move(other));
     }
 
     return *this;
