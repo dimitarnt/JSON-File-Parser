@@ -2,7 +2,13 @@
 #include "constants.h"
 #include "fileFunctions.h"
 
-String JsonNode::parseValue(std::ifstream& in) const {
+JsonNode::JsonNode(JsonNodeType type) : _type(type) {}
+
+JsonNodeType JsonNode::getType() const {
+    return _type;
+}
+
+String JsonNode::parseValue(std::ifstream& in) {
     String result;
     char currentChar = 0;
 

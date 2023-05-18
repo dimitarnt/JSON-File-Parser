@@ -1,19 +1,30 @@
 #pragma once
 #include "String.h"
 
+enum class JsonNodeType {
+    JSON_OBJECT,
+    JSON_ARRAY,
+    JSON_STRING,
+    JSON_VALUE
+};
+
 namespace {
     const int NUMBER_OF_INDENTATION_SPACES = 2;
 }
 
 class JsonNode {
+private:
+    JsonNodeType _type;
+
 public:
-    JsonNode() = default;
+    explicit JsonNode(JsonNodeType type);
     virtual ~JsonNode() = default;
-
-    String parseValue(std::ifstream& in) const;
-
-    virtual void print() const = 0;
-    static void printIndentation(unsigned nestingLevel);
-
     virtual JsonNode* clone() const = 0;
+
+    JsonNodeType getType() const;
+
+    static String parseValue(std::ifstream& in);
+
+    virtual void print(unsigned nestingLevel) const = 0;
+    static void printIndentation(unsigned nestingLevel);
 };
