@@ -10,7 +10,7 @@ public:
     JsonValue() = delete;
     explicit JsonValue(std::ifstream& in);
 
-    void print() const override;
+    void print(unsigned nestingLevel) const override;
 
     JsonNode* clone() const override;
 };
