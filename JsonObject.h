@@ -7,14 +7,13 @@ class JsonObject : public JsonNode {
 private:
     JsonNodeCollection _jsonNodeCollection;
     Vector<String> _correspondingKeys;
-    unsigned _nestingLevel;
 
 public:
     JsonObject() = delete;
-    JsonObject(std::ifstream& in, unsigned nestingLevel);
+    explicit JsonObject(std::ifstream& in);
     ~JsonObject() override = default;
 
-    void print() const override;
+    void print(unsigned nestingLevel) const override;
 
     JsonNode* clone() const override;
 };
