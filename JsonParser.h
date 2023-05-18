@@ -16,4 +16,6 @@ public:
     void setFile(const char* fileName);
 
     void print() const;
+
+    void search(const char* key) const;
 };

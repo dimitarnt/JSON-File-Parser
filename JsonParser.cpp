@@ -33,14 +33,14 @@ void JsonParser::setFile(const char* fileName) {
     char firstChar = (char)in.get();
 
     if(firstChar == '{') {
-        _startingNode.addJsonObject(in, 0);
+        _startingNode.addJsonNode(JsonNodeType::JSON_OBJECT, in);
     }
 
     if(firstChar == '[') {
-        _startingNode.addJsonArray(in, 0);
+        _startingNode.addJsonNode(JsonNodeType::JSON_ARRAY, in);
     }
 }
 
 void JsonParser::print() const {
-    _startingNode[0]->print();
+    _startingNode[0]->print(0);
 }
