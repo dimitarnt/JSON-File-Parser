@@ -9,8 +9,6 @@ private:
     void copyFrom(const JsonNodeCollection& other);
     void free();
 
-    void addJsonNode(JsonNode* newJsonNode);
-
 public:
     JsonNodeCollection() = default;
     JsonNodeCollection(const JsonNodeCollection& other);
@@ -20,11 +18,10 @@ public:
     ~JsonNodeCollection();
 
     unsigned getSize() const;
-
-    void addJsonObject(std::ifstream& in, unsigned nestingLevel);
-    void addJsonArray(std::ifstream& in, unsigned nestingLevel);
-    void addJsonString(std::ifstream& in);
-    void addJsonValue(std::ifstream& in);
-
     const JsonNode* operator[](unsigned index) const;
+    JsonNodeType getTypeByIndex(unsigned index) const;
+
+    void addJsonNode(JsonNodeType type, std::ifstream& in);
 };
+
+JsonNode* jsonNodeFactory(JsonNodeType type, std::ifstream& in);
