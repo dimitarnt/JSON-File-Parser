@@ -4,7 +4,7 @@ JsonValue::JsonValue(std::ifstream& in) : JsonNode(JsonNodeType::JSON_VALUE) {
     _value = parseValue(in);
 }
 
-void JsonValue::print(unsigned nestingLevel) const {
+void JsonValue::print(unsigned nestingLevel, bool isInArray) const {
     std::cout << _value;
 }
 

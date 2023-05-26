@@ -321,14 +321,14 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
 bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                              long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
 
-    return (lastPositionOfClosedBracket > lastPositionOfOpenBracket || lastPositionOfOpenBrace > lastPositionOfOpenBracket)
+    return lastPositionOfClosedBracket > lastPositionOfOpenBracket && lastPositionOfOpenBrace > lastPositionOfOpenBracket
            && lastPositionOfOpenBrace > lastPositionOfClosedBrace;
 }
 
 bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
 
-    return (lastPositionOfClosedBrace > lastPositionOfOpenBrace || lastPositionOfOpenBracket > lastPositionOfOpenBrace)
+    return lastPositionOfClosedBrace > lastPositionOfOpenBrace && lastPositionOfOpenBracket > lastPositionOfOpenBrace
            && lastPositionOfOpenBracket > lastPositionOfClosedBracket;
 }
 
@@ -742,6 +742,7 @@ void JsonValidator::validateCommaPlacement() const {
         if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
 
             if(!validTokensPrecedingCommaInJsonObject(previousToken, tokenThreePositionsBack)) {
+                std::cout << lastPositionOfOpenBrace << '/' << lastPositionOfClosedBrace << '/' << lastPositionOfOpenBracket << '/' << lastPositionOfClosedBracket;
                 String message("Out of place comma at row ");
                 message += getRowPositionOfToken(positionOfComma);
 

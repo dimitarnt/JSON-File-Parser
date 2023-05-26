@@ -10,7 +10,7 @@ public:
     JsonString() = delete;
     explicit JsonString(std::ifstream& in);
 
-    void print(unsigned nestingLevel) const override;
+    void print(unsigned nestingLevel, bool isInArray) const override;
 
     JsonNode* clone() const override;
 };
