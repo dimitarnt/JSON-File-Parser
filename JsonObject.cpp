@@ -85,7 +85,11 @@ JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) 
     }
 }
 
-void JsonObject::print(unsigned nestingLevel) const {
+JsonNode* JsonObject::clone() const {
+    return new JsonObject(*this);
+}
+
+void JsonObject::print(unsigned nestingLevel, bool isInArray) const {
     size_t numberOfPairsInObject = _correspondingKeys.getSize();
 
     std::cout << '{' << '\n';
@@ -96,12 +100,12 @@ void JsonObject::print(unsigned nestingLevel) const {
 
         std::cout << '\"' << _correspondingKeys[i] << '\"' << ':' << ' ';
 
-        _jsonNodeCollection[i]->print(nestingLevel + 1);
+        _jsonNodeCollection[i]->print(nestingLevel + 1, false);
 
         if(i == numberOfPairsInObject - 1) {
             std::cout << '\n';
 
-            printIndentation(nestingLevel);
+            isInArray ? printIndentation(nestingLevel + 1) : printIndentation(nestingLevel);
 
             std::cout << '}';
             return;
@@ -111,6 +115,18 @@ void JsonObject::print(unsigned nestingLevel) const {
     }
 }
 
-JsonNode* JsonObject::clone() const {
-    return new JsonObject(*this);
+void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
+
+    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+
+        if(_correspondingKeys[i] == keyStr) {
+            searchResults.add(_jsonNodeCollection[i]);
+        }
+
+        if(_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_OBJECT
+           ||_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_ARRAY) {
+
+            _jsonNodeCollection[i]->search(searchResults, keyStr);
+        }
+    }
 }
