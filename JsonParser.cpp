@@ -42,5 +42,20 @@ void JsonParser::setFile(const char* fileName) {
 }
 
 void JsonParser::print() const {
-    _startingNode[0]->print(0);
+    _startingNode[0]->print(0, false);
+    std::cout << std::endl;
+}
+
+void JsonParser::search(const char* key) const {
+    JsonArray searchResults;
+    String keyStr(key);
+
+    if(_startingNode.getTypeByIndex(0) == JsonNodeType::JSON_OBJECT
+       ||_startingNode.getTypeByIndex(0) == JsonNodeType::JSON_ARRAY) {
+
+        _startingNode[0]->search(searchResults, keyStr);
+    }
+
+    searchResults.print(0, false);
+    std::cout << std::endl;
 }
