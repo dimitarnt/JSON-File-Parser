@@ -7,11 +7,13 @@ private:
     JsonNodeCollection _jsonNodeCollection;
 
 public:
-    JsonArray() = delete;
+    JsonArray();
     explicit JsonArray(std::ifstream& in);
-    ~JsonArray() override = default;
-
-    void print(unsigned nestingLevel) const override;
-
     JsonNode* clone() const override;
+
+    void add(const SharedPtr<JsonNode>& newJsonNode);
+
+    void print(unsigned nestingLevel, bool isInArray) const override;
+
+    void search(JsonArray& searchResults, const String& keyStr) const override;
 };

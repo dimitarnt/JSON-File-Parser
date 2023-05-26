@@ -1,7 +1,8 @@
 #include "JsonArray.h"
-#include "JsonObject.h"
 #include "JsonValue.h"
 #include "fileFunctions.h"
+
+JsonArray::JsonArray() : JsonNode(JsonNodeType::JSON_ARRAY) {}
 
 JsonArray::JsonArray(std::ifstream& in) : JsonNode(JsonNodeType::JSON_ARRAY) {
 
@@ -73,7 +74,15 @@ JsonArray::JsonArray(std::ifstream& in) : JsonNode(JsonNodeType::JSON_ARRAY) {
     }
 }
 
-void JsonArray::print(unsigned nestingLevel) const {
+JsonNode* JsonArray::clone() const {
+    return new JsonArray(*this);
+}
+
+void JsonArray::add(const SharedPtr<JsonNode>& newJsonNode) {
+    _jsonNodeCollection.addJsonNode(newJsonNode);
+}
+
+void JsonArray::print(unsigned nestingLevel, bool isInArray) const {
     size_t numberOfElementsInArray = _jsonNodeCollection.getSize();
 
     std::cout << '[' << '\n';
@@ -82,12 +91,12 @@ void JsonArray::print(unsigned nestingLevel) const {
 
         printIndentation(nestingLevel + 1);
 
-        _jsonNodeCollection[i]->print(nestingLevel);
+        _jsonNodeCollection[i]->print(nestingLevel, true);
 
         if(i == numberOfElementsInArray - 1) {
             std::cout << '\n';
 
-            printIndentation(nestingLevel);
+            isInArray ? printIndentation(nestingLevel + 1) : printIndentation(nestingLevel);
 
             std::cout << ']';
             return;
@@ -97,6 +106,14 @@ void JsonArray::print(unsigned nestingLevel) const {
     }
 }
 
-JsonNode* JsonArray::clone() const {
-    return new JsonArray(*this);
+void JsonArray::search(JsonArray& searchResults, const String& keyStr) const {
+
+    for(unsigned i = 0; i < _jsonNodeCollection.getSize(); ++i) {
+
+        if(_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_OBJECT
+            ||_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_ARRAY) {
+
+            _jsonNodeCollection[i]->search(searchResults, keyStr);
+        }
+    }
 }
