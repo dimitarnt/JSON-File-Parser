@@ -62,10 +62,7 @@ SharedPtr<T>::SharedPtr(T* data) {
 
 template <typename T>
 SharedPtr<T>::SharedPtr(const SharedPtr<T>& other) {
-
-    data = other.data;
-    pointersCount = other.pointersCount;
-    (*pointersCount)++;
+    copyFrom(other);
 }
 
 template <typename T>
