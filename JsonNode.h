@@ -1,6 +1,8 @@
 #pragma once
 #include "String.h"
 
+class JsonArray;
+
 enum class JsonNodeType {
     JSON_OBJECT,
     JSON_ARRAY,
@@ -25,6 +27,8 @@ public:
 
     static String parseValue(std::ifstream& in);
 
-    virtual void print(unsigned nestingLevel) const = 0;
+    virtual void print(unsigned nestingLevel, bool isInArray) const = 0;
     static void printIndentation(unsigned nestingLevel);
+
+    virtual void search(JsonArray& searchResults, const String& keyStr) const;
 };

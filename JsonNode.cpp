@@ -72,3 +72,7 @@ void JsonNode::printIndentation(unsigned nestingLevel) {
         }
     }
 }
+
+void JsonNode::search(JsonArray& searchResults, const String& keyStr) const {
+    throw std::logic_error("Function is not intended to have an implementation in this derived class");
+}
