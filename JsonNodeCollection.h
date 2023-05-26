@@ -1,27 +1,21 @@
 #pragma once
 #include "Vector.hpp"
+#include "SharedPtr.hpp"
 #include "JsonNode.h"
 
 class JsonNodeCollection {
 private:
-    Vector<JsonNode*> _jsonNodes;
-
-    void copyFrom(const JsonNodeCollection& other);
-    void free();
+    Vector<SharedPtr<JsonNode>> _jsonNodes;
 
 public:
     JsonNodeCollection() = default;
-    JsonNodeCollection(const JsonNodeCollection& other);
-    JsonNodeCollection(JsonNodeCollection&& other) noexcept;
-    JsonNodeCollection& operator=(const JsonNodeCollection& other);
-    JsonNodeCollection& operator=(JsonNodeCollection&& other) noexcept;
-    ~JsonNodeCollection();
 
     unsigned getSize() const;
-    const JsonNode* operator[](unsigned index) const;
+    SharedPtr<JsonNode> operator[](unsigned index) const;
     JsonNodeType getTypeByIndex(unsigned index) const;
 
     void addJsonNode(JsonNodeType type, std::ifstream& in);
+    void addJsonNode(const SharedPtr<JsonNode>& newJsonNode);
 };
 
-JsonNode* jsonNodeFactory(JsonNodeType type, std::ifstream& in);
+SharedPtr<JsonNode> jsonNodeFactory(JsonNodeType type, std::ifstream& in);
