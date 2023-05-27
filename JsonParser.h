@@ -16,6 +16,8 @@ public:
     void setFile(const char* fileName);
 
     void print() const;
-
     void search(const char* key) const;
+
+    void set(const char* path, const char* newStr);
+    void remove(const char* path);
 };

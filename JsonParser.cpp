@@ -50,12 +50,16 @@ void JsonParser::search(const char* key) const {
     JsonArray searchResults;
     String keyStr(key);
 
-    if(_startingNode.getTypeByIndex(0) == JsonNodeType::JSON_OBJECT
-       ||_startingNode.getTypeByIndex(0) == JsonNodeType::JSON_ARRAY) {
-
-        _startingNode[0]->search(searchResults, keyStr);
-    }
+    _startingNode[0]->search(searchResults, keyStr);
 
     searchResults.print(0, false);
     std::cout << std::endl;
+}
+
+void JsonParser::set(const char* path, const char* newStr) {
+    _startingNode[0]->set(path, newStr, 0);
+}
+
+void JsonParser::remove(const char* path) {
+    _startingNode[0]->remove(path, 0);
 }
