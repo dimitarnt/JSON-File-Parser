@@ -8,6 +8,8 @@ private:
     JsonNodeCollection _jsonNodeCollection;
     Vector<String> _correspondingKeys;
 
+    long long findKeyIndex(const String& key) const;
+
 public:
     JsonObject() = delete;
     explicit JsonObject(std::ifstream& in);
@@ -15,5 +17,8 @@ public:
 
     void print(unsigned nestingLevel, bool isInArray) const override;
 
-    void search(JsonArray& searchResults, const String& keyStr) const;
+    void search(JsonArray& searchResults, const String& keyStr) const override;
+
+    void set(const char* path, const char* newStr, unsigned nestingLevel) override;
+    void remove(const char* path, unsigned nestingLevel) override;
 };

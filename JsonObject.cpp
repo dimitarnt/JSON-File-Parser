@@ -1,7 +1,8 @@
 #include "JsonObject.h"
-#include "JsonValue.h"
+#include "JsonString.h"
 #include "JsonArray.h"
 #include "fileFunctions.h"
+#include "InvalidJsonSyntax.h"
 
 JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) {
 
@@ -129,4 +130,60 @@ void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
             _jsonNodeCollection[i]->search(searchResults, keyStr);
         }
     }
+}
+
+long long JsonObject::findKeyIndex(const String& key) const {
+
+    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+
+        if(key == _correspondingKeys[i]) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertString(key.getData());
+
+    long long keyIndex = findKeyIndex(key);
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw InvalidJsonSyntax(message);
+    }
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        assertString(newStr);
+
+        _jsonNodeCollection[keyIndex] = new JsonString(String(newStr));
+        return;
+    }
+
+    _jsonNodeCollection[keyIndex]->set(path, newStr, nestingLevel + 1);
+}
+
+void JsonObject::remove(const char* path, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertString(key.getData());
+
+    long long keyIndex = findKeyIndex(key);
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw InvalidJsonSyntax(message);
+    }
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        _jsonNodeCollection.removeJsonNodeByIndex(keyIndex);
+        return;
+    }
+
+    _jsonNodeCollection[keyIndex]->remove(path, nestingLevel + 1);
 }
