@@ -153,6 +153,27 @@ char String::operator[](size_t index) const {
     }
 }
 
+bool String::isNaturalNumber() const {
+    size_t currentLength = getLength();
+
+    if(currentLength == 0) {
+        return false;
+    }
+
+    if(getData()[0] == '0' && currentLength > 1) {
+        return false;
+    }
+
+    for(size_t i = 0; i < currentLength; ++i) {
+
+        if(getData()[i] < '0' || getData()[i] > '9') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 String String::substring(size_t begin, size_t substringLength) const {
     if (begin + substringLength > getLength()) {
         throw std::length_error("Error, substring is out of range");
