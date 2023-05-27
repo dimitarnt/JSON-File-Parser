@@ -229,33 +229,6 @@ void JsonValidator::validateNumberBuildingInterception(std::ifstream& in, bool n
     }
 }
 
-unsigned JsonValidator::getSpecificTokenCount(char token) const {
-    unsigned count = 0;
-
-    for(unsigned i = 0; i < _tokenCount; ++i) {
-        if(_tokens[i] == token) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-long long JsonValidator::getPositionOfToken(char token, unsigned timesMet) const {
-
-    for (unsigned i = 0; i < _tokenCount; ++i) {
-        if (_tokens[i] == token) {
-            timesMet--;
-        }
-
-        if (timesMet == 0) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 long long JsonValidator::getLastPositionOfToken(char token, unsigned fromIndex) const {
     assertIndex(fromIndex);
 
@@ -421,8 +394,8 @@ bool JsonValidator::validTokensPrecedingCommaInJsonArray(char token) {
 }
 
 void JsonValidator::validateBraceMatching() const {
-    unsigned numberOfOpenBraces = getSpecificTokenCount('{');
-    unsigned numberOfClosedBraces = getSpecificTokenCount('}');
+    unsigned numberOfOpenBraces = getCharCount(_tokens.getData(), _tokenCount, '{');
+    unsigned numberOfClosedBraces = getCharCount(_tokens.getData(), _tokenCount, '}');
 
     if(numberOfOpenBraces < numberOfClosedBraces) {
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', _tokenCount - 1);
@@ -434,7 +407,7 @@ void JsonValidator::validateBraceMatching() const {
     }
 
     if(numberOfOpenBraces > numberOfClosedBraces) {
-        long long firstPositionOfOpenBrace = getPositionOfToken('{', 1);
+        long long firstPositionOfOpenBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '{', 1);
 
         String message("No matching closed brace of open brace at row ");
         message += getRowPositionOfToken(firstPositionOfOpenBrace);
@@ -444,11 +417,11 @@ void JsonValidator::validateBraceMatching() const {
 }
 
 void JsonValidator::validateBracePlacement() const {
-    unsigned numberOfOpenBraces = getSpecificTokenCount('{');
-    unsigned numberOfClosedBraces = getSpecificTokenCount('}');
+    unsigned numberOfOpenBraces = getCharCount(_tokens.getData(), _tokenCount, '{');
+    unsigned numberOfClosedBraces = getCharCount(_tokens.getData(), _tokenCount, '}');
 
     for(unsigned i = 0; i < numberOfOpenBraces; ++i) {
-        long long positionOfOpenBrace = getPositionOfToken('{', i + 1);
+        long long positionOfOpenBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '{', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBrace, 1);
 
         if(!validTokenBeforeOpenBrace(previousToken)) {
@@ -460,7 +433,7 @@ void JsonValidator::validateBracePlacement() const {
     }
 
     for(unsigned i = 0; i < numberOfClosedBraces; ++i) {
-        long long positionOfClosedBrace = getPositionOfToken('}', i + 1);
+        long long positionOfClosedBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '}', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBrace, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfClosedBrace, 3);
 
@@ -474,8 +447,8 @@ void JsonValidator::validateBracePlacement() const {
 }
 
 void JsonValidator::validateBracketMatching() const {
-    unsigned numberOfOpenBrackets = getSpecificTokenCount('[');
-    unsigned numberOfClosedBrackets = getSpecificTokenCount(']');
+    unsigned numberOfOpenBrackets = getCharCount(_tokens.getData(), _tokenCount, '[');
+    unsigned numberOfClosedBrackets = getCharCount(_tokens.getData(), _tokenCount, ']');
 
     if(numberOfOpenBrackets < numberOfClosedBrackets) {
         long long lastPositionOfClosedBracket = getLastPositionOfToken(']', _tokenCount - 1);
@@ -487,7 +460,7 @@ void JsonValidator::validateBracketMatching() const {
     }
 
     if(numberOfOpenBrackets > numberOfClosedBrackets) {
-        long long firstPositionOfOpenBracket = getPositionOfToken('[', 1);
+        long long firstPositionOfOpenBracket = getPositionOfChar(_tokens.getData(), _tokenCount, '[', 1);
 
         String message("No matching closed bracket at row ");
         message += getRowPositionOfToken(firstPositionOfOpenBracket);
@@ -497,11 +470,11 @@ void JsonValidator::validateBracketMatching() const {
 }
 
 void JsonValidator::validateBracketPlacement() const {
-    unsigned numberOfOpenBrackets = getSpecificTokenCount('[');
-    unsigned numberOfClosedBrackets = getSpecificTokenCount(']');
+    unsigned numberOfOpenBrackets = getCharCount(_tokens.getData(), _tokenCount, '[');
+    unsigned numberOfClosedBrackets = getCharCount(_tokens.getData(), _tokenCount, ']');
 
     for(unsigned i = 0; i < numberOfOpenBrackets; ++i) {
-        long long positionOfOpenBracket = getPositionOfToken('[', i + 1);
+        long long positionOfOpenBracket = getPositionOfChar(_tokens.getData(), _tokenCount, '[', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBracket, 1);
 
         if(!validTokenBeforeOpenBracket(previousToken)) {
@@ -513,7 +486,7 @@ void JsonValidator::validateBracketPlacement() const {
     }
 
     for(unsigned i = 0; i < numberOfClosedBrackets; ++i) {
-        long long positionOfClosedBracket = getPositionOfToken(']', i + 1);
+        long long positionOfClosedBracket = getPositionOfChar(_tokens.getData(), _tokenCount, ']', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBracket, 1);
 
         if(!validTokenBeforeClosedBracket(previousToken)) {
@@ -528,10 +501,10 @@ void JsonValidator::validateBracketPlacement() const {
 void JsonValidator::validateDigitPlacement() const {
 
     for(unsigned i = 0; i < NUMBER_OF_DIGITS; ++i) {
-        unsigned currentDigitCount = getSpecificTokenCount('0' + i);
+        unsigned currentDigitCount = getCharCount(_tokens.getData(), _tokenCount, '0' + i);
 
         for(unsigned j = 0; j < currentDigitCount; ++j) {
-            long long positionOfCurrentDigit = getPositionOfToken('0' + i, j + 1);
+            long long positionOfCurrentDigit = getPositionOfChar(_tokens.getData(), _tokenCount, '0' + i, j + 1);
             long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfCurrentDigit);
             long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfCurrentDigit);
             long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfCurrentDigit);
@@ -578,10 +551,10 @@ void JsonValidator::validateDigitPlacement() const {
 }
 
 void JsonValidator::validateDotPlacement() const {
-    unsigned numberOfDots = getSpecificTokenCount('.');
+    unsigned numberOfDots = getCharCount(_tokens.getData(), _tokenCount, '.');
 
     for(unsigned i = 0; i < numberOfDots; ++i) {
-        long long positionOfDot = getPositionOfToken('.', i + 1);
+        long long positionOfDot = getPositionOfChar(_tokens.getData(), _tokenCount, '.', i + 1);
 
         char previousToken = getPrecedingNonNewLineTokens(positionOfDot, 1);
         char nextToken = getNextNonNewLineToken(positionOfDot);
@@ -596,10 +569,10 @@ void JsonValidator::validateDotPlacement() const {
 }
 
 void JsonValidator::validateMinusPlacement() const {
-    unsigned numberOfMinuses = getSpecificTokenCount('-');
+    unsigned numberOfMinuses = getCharCount(_tokens.getData(), _tokenCount, '-');
 
     for(unsigned i = 0; i < numberOfMinuses; ++i) {
-        long long positionOfMinuses = getPositionOfToken('-', i + 1);
+        long long positionOfMinuses = getPositionOfChar(_tokens.getData(), _tokenCount, '-', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfMinuses);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfMinuses);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfMinuses);
@@ -637,20 +610,20 @@ void JsonValidator::validateValueKeywordPlacement() const {
         switch(i) {
             case 0:
                 firstCharacterOfKeyword = 't';
-                currentKeywordCount = getSpecificTokenCount('t');
+                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 't');
                 break;
             case 1:
                 firstCharacterOfKeyword = 'f';
-                currentKeywordCount = getSpecificTokenCount('f');
+                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 'f');
                 break;
             case 2:
                 firstCharacterOfKeyword = 'n';
-                currentKeywordCount = getSpecificTokenCount('n');
+                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 'n');
                 break;
         }
 
         for(unsigned j = 0; j < currentKeywordCount; ++j) {
-            long long positionOfKeyword = getPositionOfToken(firstCharacterOfKeyword, j + 1);
+            long long positionOfKeyword = getPositionOfChar(_tokens.getData(), _tokenCount, firstCharacterOfKeyword, j + 1);
             long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfKeyword);
             long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfKeyword);
             long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfKeyword);
@@ -681,10 +654,10 @@ void JsonValidator::validateValueKeywordPlacement() const {
 }
 
 void JsonValidator::validateQuotationMarkPlacement() const {
-    unsigned numberOfQuotationMarks = getSpecificTokenCount('\"');
+    unsigned numberOfQuotationMarks = getCharCount(_tokens.getData(), _tokenCount, '\"');
 
     for(unsigned i = 0; i < numberOfQuotationMarks; ++i) {
-        long long positionOfQuotationMark = getPositionOfToken('\"', i + 1);
+        long long positionOfQuotationMark = getPositionOfChar(_tokens.getData(), _tokenCount, '\"', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfQuotationMark, 1);
         char tokenTwoPositionsBack = getPrecedingNonNewLineTokens(positionOfQuotationMark, 2);
 
@@ -698,10 +671,10 @@ void JsonValidator::validateQuotationMarkPlacement() const {
 }
 
 void JsonValidator::validateColonPlacement() const {
-    unsigned numberOfColons = getSpecificTokenCount(':');
+    unsigned numberOfColons = getCharCount(_tokens.getData(), _tokenCount, ':');
 
     for(unsigned i = 0; i < numberOfColons; ++i) {
-        long long positionOfColon = getPositionOfToken(':', i + 1);
+        long long positionOfColon = getPositionOfChar(_tokens.getData(), _tokenCount, ':', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfColon);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfColon);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfColon);
@@ -727,10 +700,10 @@ void JsonValidator::validateColonPlacement() const {
 }
 
 void JsonValidator::validateCommaPlacement() const {
-    unsigned numberOfCommas = getSpecificTokenCount(',');
+    unsigned numberOfCommas = getCharCount(_tokens.getData(), _tokenCount, ',');
 
     for(unsigned i = 0; i < numberOfCommas; ++i) {
-        long long positionOfComma = getPositionOfToken(',', i + 1);
+        long long positionOfComma = getPositionOfChar(_tokens.getData(), _tokenCount, ',', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfComma);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfComma);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfComma);

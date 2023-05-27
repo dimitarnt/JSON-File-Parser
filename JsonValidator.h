@@ -15,8 +15,6 @@ private:
                                                  unsigned buildingOfFalseKeyword, unsigned buildingOfNullKeyword);
     static void validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt);
 
-    unsigned getSpecificTokenCount(char token) const;
-    long long getPositionOfToken(char token, unsigned timesMet) const;
     long long getLastPositionOfToken(char token, unsigned fromIndex) const;
     char getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const;
     char getNextNonNewLineToken(unsigned index) const;
