@@ -12,10 +12,14 @@ public:
 
     unsigned getSize() const;
     SharedPtr<JsonNode> operator[](unsigned index) const;
+    SharedPtr<JsonNode>& operator[](unsigned index);
     JsonNodeType getTypeByIndex(unsigned index) const;
 
     void addJsonNode(JsonNodeType type, std::ifstream& in);
     void addJsonNode(const SharedPtr<JsonNode>& newJsonNode);
+    void addJsonNode(SharedPtr<JsonNode>&& newJsonNode);
+
+    void removeJsonNodeByIndex(unsigned index);
 };
 
 SharedPtr<JsonNode> jsonNodeFactory(JsonNodeType type, std::ifstream& in);

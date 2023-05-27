@@ -12,6 +12,10 @@ SharedPtr<JsonNode> JsonNodeCollection::operator[](unsigned index) const {
     return _jsonNodes[index];
 }
 
+SharedPtr<JsonNode>& JsonNodeCollection::operator[](unsigned index) {
+    return _jsonNodes[index];
+}
+
 JsonNodeType JsonNodeCollection::getTypeByIndex(unsigned index) const {
     return _jsonNodes[index]->getType();
 }
@@ -22,6 +26,14 @@ void JsonNodeCollection::addJsonNode(JsonNodeType type, std::ifstream& in) {
 
 void JsonNodeCollection::addJsonNode(const SharedPtr<JsonNode>& newJsonNode) {
     _jsonNodes.pushBack(newJsonNode);
+}
+
+void JsonNodeCollection::addJsonNode(SharedPtr<JsonNode>&& newJsonNode) {
+    _jsonNodes.pushBack(newJsonNode);
+}
+
+void JsonNodeCollection::removeJsonNodeByIndex(unsigned index) {
+    _jsonNodes.popAt(index);
 }
 
 SharedPtr<JsonNode> jsonNodeFactory(JsonNodeType type, std::ifstream& in) {
