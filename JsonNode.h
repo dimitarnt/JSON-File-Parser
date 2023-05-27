@@ -31,4 +31,11 @@ public:
     static void printIndentation(unsigned nestingLevel);
 
     virtual void search(JsonArray& searchResults, const String& keyStr) const;
+
+    static unsigned lastNestingLevelInPath(const char* path);
+    static String getKeyInPath(const char* path, unsigned nestingLevel);
+    static void assertString(const char* str);
+
+    virtual void set(const char* path, const char* newStr, unsigned nestingLevel);
+    virtual void remove(const char* path, unsigned nestingLevel);
 };
