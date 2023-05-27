@@ -1,5 +1,6 @@
 #include "JsonArray.h"
-#include "JsonValue.h"
+#include "JsonString.h"
+#include "InvalidJsonSyntax.h"
 #include "fileFunctions.h"
 
 JsonArray::JsonArray() : JsonNode(JsonNodeType::JSON_ARRAY) {}
@@ -82,6 +83,10 @@ void JsonArray::add(const SharedPtr<JsonNode>& newJsonNode) {
     _jsonNodeCollection.addJsonNode(newJsonNode);
 }
 
+void JsonArray::add(SharedPtr<JsonNode>&& newJsonNode) {
+    _jsonNodeCollection.addJsonNode(newJsonNode);
+}
+
 void JsonArray::print(unsigned nestingLevel, bool isInArray) const {
     size_t numberOfElementsInArray = _jsonNodeCollection.getSize();
 
@@ -116,4 +121,66 @@ void JsonArray::search(JsonArray& searchResults, const String& keyStr) const {
             _jsonNodeCollection[i]->search(searchResults, keyStr);
         }
     }
+}
+
+void JsonArray::assertNaturalNumberFromStr(const String &index, unsigned int nestingLevel) {
+    if(!index.isNaturalNumber()) {
+        String message("Invalid index at nesting level ");
+        message += nestingLevel;
+
+        throw InvalidJsonSyntax(message);
+    }
+}
+
+void JsonArray::assertIndex(size_t index, unsigned nestingLevel) const {
+    if(index >= _jsonNodeCollection.getSize()) {
+        String message("Index is out of range at nesting level ");
+        message += nestingLevel;
+
+        throw InvalidJsonSyntax(message);
+    }
+}
+
+void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertNaturalNumberFromStr(key, nestingLevel);
+
+    size_t index = 0;
+    size_t digitCount = key.getLength();
+
+    for(size_t i = 0; i < digitCount; ++i) {
+        index += (key[i] - '0') * pow(10, digitCount - i - 1);
+    }
+
+    assertIndex(index, nestingLevel);
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        assertString(newStr);
+
+        _jsonNodeCollection[index] = new JsonString(String(newStr));
+        return;
+    }
+
+    _jsonNodeCollection[index]->set(path, newStr, nestingLevel + 1);
+}
+
+void JsonArray::remove(const char* path, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertNaturalNumberFromStr(key, nestingLevel);
+
+    size_t index = 0;
+    size_t digitCount = key.getLength();
+
+    for(size_t i = 0; i < digitCount; ++i) {
+        index += (key[i] - '0') * pow(10, digitCount - i - 1);
+    }
+
+    assertIndex(index, nestingLevel);
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        _jsonNodeCollection.removeJsonNodeByIndex(index);
+        return;
+    }
+
+    _jsonNodeCollection[index]->remove(path, nestingLevel + 1);
 }
