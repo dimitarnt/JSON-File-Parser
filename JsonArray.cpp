@@ -139,6 +139,15 @@ void JsonArray::assertIndex(size_t index, unsigned nestingLevel) const {
     }
 }
 
+void JsonArray::assertExtendedIndex(size_t index, unsigned int nestingLevel) const {
+    if(index > _jsonNodeCollection.getSize()) {
+        String message("Index is out of range at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+}
+
 void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel) {
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
@@ -153,8 +162,6 @@ void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel)
     assertIndex(index, nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        assertString(newStr);
-
         _jsonNodeCollection[index] = new JsonString(String(newStr));
         return;
     }
@@ -166,6 +173,36 @@ void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel)
     }
 
     _jsonNodeCollection[index]->set(path, newStr, nestingLevel + 1);
+}
+
+void JsonArray::create(const char* path, bool isAddressingStartingNode, bool createInArray,
+                       const char* newKey, const char* newStr, unsigned nestingLevel) {
+
+    String key = getKeyInPath(path, nestingLevel);
+    assertNaturalNumberFromStr(key, nestingLevel);
+
+    size_t index = 0;
+    size_t digitCount = key.getLength();
+
+    for(size_t i = 0; i < digitCount; ++i) {
+        index += (key[i] - '0') * pow(10, digitCount - i - 1);
+    }
+
+    assertExtendedIndex(index, nestingLevel);
+
+    if(nestingLevel == lastNestingLevelInPath(path) && createInArray) {
+        _jsonNodeCollection.addJsonNode(new JsonString(String(newStr)), index);
+        return;
+    }
+
+    if(_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_VALUE
+       || index == _jsonNodeCollection.getSize()) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
+    }
+
+    _jsonNodeCollection[index]->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
 }
 
 void JsonArray::remove(const char* path, unsigned nestingLevel) {
