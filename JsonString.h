@@ -11,6 +11,7 @@ public:
     explicit JsonString(std::ifstream& in);
     explicit JsonString(const String& value);
     explicit JsonString(String&& value);
+    explicit JsonString(const char* value);
 
     void print(unsigned nestingLevel, bool isInArray) const override;
 
