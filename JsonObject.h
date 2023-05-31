@@ -9,6 +9,8 @@ private:
     Vector<String> _correspondingKeys;
 
     long long findKeyIndex(const String& key) const;
+    static void assertKey(const char* key);
+    void assertNewKey(const char* newKey) const;
 
 public:
     JsonObject() = delete;
@@ -20,5 +22,7 @@ public:
     void search(JsonArray& searchResults, const String& keyStr) const override;
 
     void set(const char* path, const char* newStr, unsigned nestingLevel) override;
+    void create(const char* path, bool isAddressingStartingNode, bool createInArray,
+                const char* newKey, const char* newStr, unsigned nestingLevel) override;
     void remove(const char* path, unsigned nestingLevel) override;
 };

@@ -1,7 +1,8 @@
 #include "JsonObject.h"
 #include "JsonString.h"
 #include "JsonArray.h"
-#include "fileFunctions.h"
+#include "InvalidJsonSyntax.h"
+#include <cstring>
 
 JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) {
 
@@ -143,9 +144,28 @@ long long JsonObject::findKeyIndex(const String& key) const {
     return -1;
 }
 
+void JsonObject::assertKey(const char* key) {
+    size_t keyLength = strlen(key);
+
+    if(getCharCount(key, keyLength, '\"') != 0 || getCharCount(key, keyLength, '\n') != 0) {
+        throw InvalidJsonSyntax("Disallowed character in given string");
+    }
+}
+
+void JsonObject::assertNewKey(const char* newKey) const {
+    assertKey(newKey);
+
+    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+
+        if(strcmp(newKey, _correspondingKeys[i].getData()) == 0) {
+            throw std::invalid_argument("Given key matches at least one other key in current object");
+        }
+    }
+}
+
 void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel) {
     String key = getKeyInPath(path, nestingLevel);
-    assertString(key.getData());
+    assertKey(key.getData());
 
     long long keyIndex = findKeyIndex(key);
 
@@ -157,8 +177,6 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
     }
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        assertString(newStr);
-
         _jsonNodeCollection[keyIndex] = new JsonString(String(newStr));
         return;
     }
@@ -172,9 +190,41 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
     _jsonNodeCollection[keyIndex]->set(path, newStr, nestingLevel + 1);
 }
 
+void JsonObject::create(const char* path, bool isAddressingStartingNode, bool createInArray,
+                        const char* newKey, const char* newStr, unsigned nestingLevel) {
+
+    if(isAddressingStartingNode || ((nestingLevel - 1) == lastNestingLevelInPath(path) && !createInArray)) {
+        assertNewKey(newKey);
+
+        _correspondingKeys.pushBack(String(newKey));
+        _jsonNodeCollection.addJsonNode(new JsonString(newStr));
+        return;
+    }
+
+    String key = getKeyInPath(path, nestingLevel);
+    assertKey(key.getData());
+
+    long long keyIndex = findKeyIndex(key);
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+
+    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
+    }
+
+    _jsonNodeCollection[keyIndex]->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
+}
+
 void JsonObject::remove(const char* path, unsigned nestingLevel) {
     String key = getKeyInPath(path, nestingLevel);
-    assertString(key.getData());
+    assertKey(key.getData());
 
     long long keyIndex = findKeyIndex(key);
 
