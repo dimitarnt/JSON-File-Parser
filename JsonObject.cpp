@@ -2,7 +2,6 @@
 #include "JsonString.h"
 #include "JsonArray.h"
 #include "fileFunctions.h"
-#include "InvalidJsonSyntax.h"
 
 JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) {
 
@@ -154,7 +153,7 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
         String message("Invalid key at nesting level ");
         message += nestingLevel;
 
-        throw InvalidJsonSyntax(message);
+        throw std::invalid_argument(message.getData());
     }
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
@@ -162,6 +161,12 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
 
         _jsonNodeCollection[keyIndex] = new JsonString(String(newStr));
         return;
+    }
+
+    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
     }
 
     _jsonNodeCollection[keyIndex]->set(path, newStr, nestingLevel + 1);
@@ -177,13 +182,19 @@ void JsonObject::remove(const char* path, unsigned nestingLevel) {
         String message("Invalid key at nesting level ");
         message += nestingLevel;
 
-        throw InvalidJsonSyntax(message);
+        throw std::invalid_argument(message.getData());
     }
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
         _correspondingKeys.popAt(keyIndex);
         _jsonNodeCollection.removeJsonNodeByIndex(keyIndex);
         return;
+    }
+
+    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
     }
 
     _jsonNodeCollection[keyIndex]->remove(path, nestingLevel + 1);

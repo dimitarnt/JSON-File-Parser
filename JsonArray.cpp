@@ -1,7 +1,5 @@
 #include "JsonArray.h"
 #include "JsonString.h"
-#include "InvalidJsonSyntax.h"
-#include "fileFunctions.h"
 
 JsonArray::JsonArray() : JsonNode(JsonNodeType::JSON_ARRAY) {}
 
@@ -128,7 +126,7 @@ void JsonArray::assertNaturalNumberFromStr(const String &index, unsigned int nes
         String message("Invalid index at nesting level ");
         message += nestingLevel;
 
-        throw InvalidJsonSyntax(message);
+        throw std::invalid_argument(message.getData());
     }
 }
 
@@ -137,7 +135,7 @@ void JsonArray::assertIndex(size_t index, unsigned nestingLevel) const {
         String message("Index is out of range at nesting level ");
         message += nestingLevel;
 
-        throw InvalidJsonSyntax(message);
+        throw std::invalid_argument(message.getData());
     }
 }
 
@@ -161,6 +159,12 @@ void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel)
         return;
     }
 
+    if(_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
+    }
+
     _jsonNodeCollection[index]->set(path, newStr, nestingLevel + 1);
 }
 
@@ -180,6 +184,12 @@ void JsonArray::remove(const char* path, unsigned nestingLevel) {
     if(nestingLevel == lastNestingLevelInPath(path)) {
         _jsonNodeCollection.removeJsonNodeByIndex(index);
         return;
+    }
+
+    if(_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_STRING
+       ||_jsonNodeCollection.getTypeByIndex(index) == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
     }
 
     _jsonNodeCollection[index]->remove(path, nestingLevel + 1);
