@@ -32,6 +32,18 @@ void JsonNodeCollection::addJsonNode(SharedPtr<JsonNode>&& newJsonNode) {
     _jsonNodes.pushBack(newJsonNode);
 }
 
+void JsonNodeCollection::addJsonNode(JsonNodeType type, std::ifstream& in, size_t index) {
+    _jsonNodes.pushAt(jsonNodeFactory(type, in), index);
+}
+
+void JsonNodeCollection::addJsonNode(const SharedPtr<JsonNode>& newJsonNode, size_t index) {
+    _jsonNodes.pushAt(newJsonNode, index);
+}
+
+void JsonNodeCollection::addJsonNode(SharedPtr<JsonNode>&& newJsonNode, size_t index) {
+    _jsonNodes.pushAt(newJsonNode, index);
+}
+
 void JsonNodeCollection::removeJsonNodeByIndex(unsigned index) {
     _jsonNodes.popAt(index);
 }

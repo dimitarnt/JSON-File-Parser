@@ -19,6 +19,10 @@ public:
     void addJsonNode(const SharedPtr<JsonNode>& newJsonNode);
     void addJsonNode(SharedPtr<JsonNode>&& newJsonNode);
 
+    void addJsonNode(JsonNodeType type, std::ifstream& in, size_t index);
+    void addJsonNode(const SharedPtr<JsonNode>& newJsonNode, size_t index);
+    void addJsonNode(SharedPtr<JsonNode>&& newJsonNode, size_t index);
+
     void removeJsonNodeByIndex(unsigned index);
 };
 
