@@ -17,6 +17,7 @@ private:
     size_t capacity;
 
     void assertIndex(size_t index) const;
+    void assertExtendedIndex(size_t index) const;
 
     void copyFrom(const Vector& other);
     void moveFrom(Vector&& other);
@@ -103,6 +104,13 @@ void Vector<T>::assertIndex(size_t index) const {
 }
 
 template <typename T>
+void Vector<T>::assertExtendedIndex(size_t index) const {
+    if (index > size) {
+        throw std::out_of_range("Error, index is out of range");
+    }
+}
+
+template <typename T>
 void Vector<T>::upsizeIfNeeded() {
     if (size == capacity) {
         resize(capacity * RESIZE_MULTIPLIER);
@@ -152,7 +160,7 @@ void Vector<T>::pushBack(const T& element) {
 
 template <typename T>
 void Vector<T>::pushAt(const T& element, size_t index) {
-    assertIndex(index);
+    assertExtendedIndex(index);
     upsizeIfNeeded();
 
     for (size_t i = size; i > index; --i) {
