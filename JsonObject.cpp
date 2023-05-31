@@ -181,6 +181,7 @@ void JsonObject::remove(const char* path, unsigned nestingLevel) {
     }
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
+        _correspondingKeys.popAt(keyIndex);
         _jsonNodeCollection.removeJsonNodeByIndex(keyIndex);
         return;
     }
