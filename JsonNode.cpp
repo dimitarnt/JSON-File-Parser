@@ -1,7 +1,6 @@
 #include "JsonNode.h"
 #include "constants.h"
 #include "fileFunctions.h"
-#include "InvalidJsonSyntax.h"
 #include <cstring>
 
 JsonNode::JsonNode(JsonNodeType type) : _type(type) {}
@@ -105,15 +104,12 @@ String JsonNode::getKeyInPath(const char* path, unsigned nestingLevel) {
     return key;
 }
 
-void JsonNode::assertString(const char* str) {
-    size_t strLength = strlen(str);
-
-    if(getCharCount(str, strLength, '\"') != 0 || getCharCount(str, strLength, '\n')) {
-        throw InvalidJsonSyntax("Disallowed character in given string");
-    }
+void JsonNode::set(const char* path, const char* newStr, unsigned nestingLevel) {
+    throw std::logic_error("Function is not intended to have an implementation in this derived class");
 }
 
-void JsonNode::set(const char* path, const char* newStr, unsigned nestingLevel) {
+void JsonNode::create(const char* path, bool isAddressingStartingNode, bool createInArray,
+                      const char* newKey, const char* newStr, unsigned nestingLevel) {
     throw std::logic_error("Function is not intended to have an implementation in this derived class");
 }
 

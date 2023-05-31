@@ -34,8 +34,9 @@ public:
 
     static unsigned lastNestingLevelInPath(const char* path);
     static String getKeyInPath(const char* path, unsigned nestingLevel);
-    static void assertString(const char* str);
 
     virtual void set(const char* path, const char* newStr, unsigned nestingLevel);
+    virtual void create(const char* path, bool isAddressingStartingNode, bool createInArray,
+                        const char* newKey, const char* newStr, unsigned nestingLevel);
     virtual void remove(const char* path, unsigned nestingLevel);
 };
