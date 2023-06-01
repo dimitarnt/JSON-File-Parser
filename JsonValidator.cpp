@@ -294,15 +294,15 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
 bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                              long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
 
-    return lastPositionOfClosedBracket > lastPositionOfOpenBracket && lastPositionOfOpenBrace > lastPositionOfOpenBracket
-           && lastPositionOfOpenBrace > lastPositionOfClosedBrace;
+    return lastPositionOfClosedBracket >= lastPositionOfOpenBracket && lastPositionOfOpenBrace >= lastPositionOfOpenBracket
+           && lastPositionOfOpenBrace >= lastPositionOfClosedBrace;
 }
 
 bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
 
-    return lastPositionOfClosedBrace > lastPositionOfOpenBrace && lastPositionOfOpenBracket > lastPositionOfOpenBrace
-           && lastPositionOfOpenBracket > lastPositionOfClosedBracket;
+    return lastPositionOfClosedBrace >= lastPositionOfOpenBrace && lastPositionOfOpenBracket >= lastPositionOfOpenBrace
+           && lastPositionOfOpenBracket >= lastPositionOfClosedBracket;
 }
 
 bool JsonValidator::validTokenBeforeOpenBrace(char token) {
@@ -344,7 +344,7 @@ bool JsonValidator::validTokenBeforeDigitInJsonObject(char token) {
 
 bool JsonValidator::validTokenBeforeDigitInJsonArray(char token) {
 
-    return token == ',' || token == '-' || token == '.' || (token >= '0' && token <= '9');
+    return token == '[' || token == ',' || token == '-' || token == '.' || (token >= '0' && token <= '9');
 }
 
 bool JsonValidator::validTokenBeforeMinusInJsonObject(char previousToken, char nextToken) {
