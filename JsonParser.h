@@ -4,8 +4,9 @@
 
 class JsonParser {
 private:
-    String _fileName;
     JsonNodeCollection _startingNode;
+    String _fileName;
+    JsonNodeType _startingNodeType;
 
     static void assertJsonFileName(const char* fileName);
     static void assertString(const char* str);
@@ -16,6 +17,9 @@ public:
     JsonParser() = delete;
     explicit JsonParser(const char* fileName);
 
+    JsonParser(const JsonParser& other) = delete;
+    JsonParser& operator=(const JsonParser& other) = delete;
+
     void setFile(const char* fileName);
 
     void print() const;
@@ -23,7 +27,7 @@ public:
 
     void set(const char* path, const char* newStr);
     void createInArray(const char* path, const char* newStr);
-    void createInObject(const char* newKey, const char* newStr);
+    void createInStartingObject(const char* newKey, const char* newStr);
     void createInObject(const char* path, const char* newKey, const char* newStr);
     void remove(const char* path);
 };

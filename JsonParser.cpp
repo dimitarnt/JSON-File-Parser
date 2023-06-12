@@ -1,5 +1,6 @@
 #include "JsonParser.h"
 #include "JsonArray.h"
+#include "JsonObject.h"
 #include "InvalidJsonSyntax.h"
 #include "constants.h"
 #include <cstring>
@@ -35,10 +36,14 @@ void JsonParser::setFile(const char* fileName) {
 
     if(firstChar == '{') {
         _startingNode.addJsonNode(JsonNodeType::JSON_OBJECT, in);
+        _startingNodeType = JsonNodeType::JSON_OBJECT;
+        return;
     }
 
     if(firstChar == '[') {
         _startingNode.addJsonNode(JsonNodeType::JSON_ARRAY, in);
+        _startingNodeType = JsonNodeType::JSON_ARRAY;
+        return;
     }
 }
 
@@ -51,7 +56,24 @@ void JsonParser::search(const char* key) const {
     JsonArray searchResults;
     String keyStr(key);
 
-    _startingNode[0]->search(searchResults, keyStr);
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+
+        jsonObjectPtr->search(searchResults, keyStr);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+
+        jsonArrayPtr->search(searchResults, keyStr);
+    }
+
+    if(searchResults.isEmpty()) {
+        std::cout << '[' << std::endl;
+        std::cout << "No results found." << std::endl;
+        std::cout << ']' << std::endl;
+        return;
+    }
 
     searchResults.print(0, false);
     std::cout << std::endl;
@@ -68,15 +90,29 @@ void JsonParser::assertString(const char* str) {
 void JsonParser::set(const char* path, const char* newStr) {
     assertString(newStr);
 
-    _startingNode[0]->set(path, newStr, 0);
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+
+        jsonObjectPtr->set(path, newStr, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+
+        jsonArrayPtr->set(path, newStr, 0);
+    }
 }
 
 void JsonParser::createInArray(const char* path, const char* newStr) {
     create(path, false, true, "", newStr);
 }
 
-void JsonParser::createInObject(const char* newKey, const char* newStr) {
-    create("", true, false, newKey, newStr);
+void JsonParser::createInStartingObject(const char* newKey, const char* newStr) {
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        create("", true, false, newKey, newStr);
+    }
+
+    throw std::logic_error("Starting Json Node is not a Json Object");
 }
 
 void JsonParser::createInObject(const char* path, const char* newKey, const char* newStr) {
@@ -84,9 +120,31 @@ void JsonParser::createInObject(const char* path, const char* newKey, const char
 }
 
 void JsonParser::create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr) {
-    _startingNode[0]->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+
+        jsonObjectPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+
+        jsonArrayPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+    }
 }
 
 void JsonParser::remove(const char* path) {
-    _startingNode[0]->remove(path, 0);
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+
+        jsonObjectPtr->remove(path, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+
+        jsonArrayPtr->remove(path, 0);
+    }
 }
