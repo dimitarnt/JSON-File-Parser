@@ -30,13 +30,6 @@ public:
     virtual void print(unsigned nestingLevel, bool isInArray) const = 0;
     static void printIndentation(unsigned nestingLevel);
 
-    virtual void search(JsonArray& searchResults, const String& keyStr) const;
-
     static unsigned lastNestingLevelInPath(const char* path);
     static String getKeyInPath(const char* path, unsigned nestingLevel);
-
-    virtual void set(const char* path, const char* newStr, unsigned nestingLevel);
-    virtual void create(const char* path, bool isAddressingStartingNode, bool createInArray,
-                        const char* newKey, const char* newStr, unsigned nestingLevel);
-    virtual void remove(const char* path, unsigned nestingLevel);
 };

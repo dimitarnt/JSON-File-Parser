@@ -74,10 +74,6 @@ void JsonNode::printIndentation(unsigned nestingLevel) {
     }
 }
 
-void JsonNode::search(JsonArray& searchResults, const String& keyStr) const {
-    throw std::logic_error("Function is not intended to have an implementation in this derived class");
-}
-
 unsigned JsonNode::lastNestingLevelInPath(const char* path) {
     size_t pathLength = strlen(path);
 
@@ -102,17 +98,4 @@ String JsonNode::getKeyInPath(const char* path, unsigned nestingLevel) {
     }
 
     return key;
-}
-
-void JsonNode::set(const char* path, const char* newStr, unsigned nestingLevel) {
-    throw std::logic_error("Function is not intended to have an implementation in this derived class");
-}
-
-void JsonNode::create(const char* path, bool isAddressingStartingNode, bool createInArray,
-                      const char* newKey, const char* newStr, unsigned nestingLevel) {
-    throw std::logic_error("Function is not intended to have an implementation in this derived class");
-}
-
-void JsonNode::remove(const char* path, unsigned int nestingLevel) {
-    throw std::logic_error("Function is not intended to have an implementation in this derived class");
 }
