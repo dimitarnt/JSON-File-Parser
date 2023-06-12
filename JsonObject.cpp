@@ -124,10 +124,18 @@ void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
             searchResults.add(_jsonNodeCollection[i]);
         }
 
-        if(_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_OBJECT
-           ||_jsonNodeCollection.getTypeByIndex(i) == JsonNodeType::JSON_ARRAY) {
+        JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(i);
 
-            _jsonNodeCollection[i]->search(searchResults, keyStr);
+        if(nodeType == JsonNodeType::JSON_OBJECT) {
+            auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[i].operator->();
+
+            jsonObjectPtr->search(searchResults, keyStr);
+        }
+
+        if(nodeType == JsonNodeType::JSON_ARRAY) {
+            auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[i].operator->();
+
+            jsonArrayPtr->search(searchResults, keyStr);
         }
     }
 }
@@ -181,13 +189,24 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
         return;
     }
 
-    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
-       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+
+    if(nodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonObjectPtr->set(path, newStr, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonArrayPtr->set(path, newStr, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
 
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
-
-    _jsonNodeCollection[keyIndex]->set(path, newStr, nestingLevel + 1);
 }
 
 void JsonObject::create(const char* path, bool isAddressingStartingNode, bool createInArray,
@@ -213,13 +232,24 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
         throw std::invalid_argument(message.getData());
     }
 
-    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
-       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+
+    if(nodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonObjectPtr->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonArrayPtr->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
 
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
-
-    _jsonNodeCollection[keyIndex]->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
 }
 
 void JsonObject::remove(const char* path, unsigned nestingLevel) {
@@ -241,11 +271,22 @@ void JsonObject::remove(const char* path, unsigned nestingLevel) {
         return;
     }
 
-    if(_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_STRING
-       ||_jsonNodeCollection.getTypeByIndex(keyIndex) == JsonNodeType::JSON_VALUE) {
+    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+
+    if(nodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonObjectPtr->remove(path, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+
+        jsonArrayPtr->remove(path, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
 
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
-
-    _jsonNodeCollection[keyIndex]->remove(path, nestingLevel + 1);
 }
