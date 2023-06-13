@@ -117,6 +117,32 @@ void JsonObject::print(unsigned nestingLevel, bool isInArray) const {
     }
 }
 
+void JsonObject::save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const {
+    size_t numberOfPairsInObject = _jsonPairs.getSize();
+
+    out << '{' << '\n';
+
+    for(unsigned i = 0; i < numberOfPairsInObject; ++i) {
+
+        putIndentationInFile(out, nestingLevel + 1);
+
+        out << '\"' << _jsonPairs.getKey(i) << '\"' << ':' << ' ';
+
+        _jsonPairs.getJsonNode(i)->save(out, nestingLevel + 1, false);
+
+        if(i == numberOfPairsInObject - 1) {
+            out << '\n';
+
+            isInArray ? putIndentationInFile(out, nestingLevel + 1) : putIndentationInFile(out, nestingLevel);
+
+            out << '}';
+            return;
+        }
+
+        out << ',' << '\n';
+    }
+}
+
 void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
 
     for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
@@ -321,6 +347,44 @@ void JsonObject::move(const char* path, bool isAddressingStartingNode, bool move
         auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
 
         jsonArrayPtr->move(path, false, moveInArray, movedKey, std::move(jsonNodeForMoving), nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
+    }
+}
+
+void JsonObject::savePath(const char* path, std::ofstream& out, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertKey(key.getData());
+
+    long long keyIndex = findKeyIndex(key);
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        _jsonPairs.getJsonNode(keyIndex)->save(out, 0, false);
+        return;
+    }
+
+    JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
+
+    if(nodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(keyIndex).get();
+
+        jsonObjectPtr->savePath(path, out, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
+
+        jsonArrayPtr->savePath(path, out, nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {

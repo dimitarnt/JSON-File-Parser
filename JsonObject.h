@@ -18,6 +18,7 @@ public:
     JsonNode* clone() const override;
 
     void print(unsigned nestingLevel, bool isInArray) const override;
+    void save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const override;
     void search(JsonArray& searchResults, const String& keyStr) const;
 
     void set(const char* path, const char* newStr, unsigned nestingLevel);
@@ -27,4 +28,6 @@ public:
                 const char* newKey, const char* newStr, unsigned nestingLevel);
     void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
               const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
+
+    void savePath(const char* path, std::ofstream& out, unsigned nestingLevel);
 };
