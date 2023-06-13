@@ -276,7 +276,7 @@ void JsonArray::create(const char* path, bool isAddressingStartingNode, bool cre
         jsonArrayPtr->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
     }
 }
-/*
+
 void JsonArray::move(const char* path, bool isAddressingStartingNode, bool moveInArray,
                      const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned int nestingLevel) {
     String key = getKeyInPath(path, nestingLevel);
@@ -315,4 +315,3 @@ void JsonArray::move(const char* path, bool isAddressingStartingNode, bool moveI
         jsonArrayPtr->move(path, false, moveInArray, movedKey, std::move(jsonNodeForMoving), nestingLevel + 1);
     }
 }
-*/
