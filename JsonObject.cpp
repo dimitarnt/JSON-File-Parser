@@ -2,6 +2,7 @@
 #include "JsonString.h"
 #include "JsonArray.h"
 #include "InvalidJsonSyntax.h"
+#include "JsonStringFactory.h"
 #include <cstring>
 
 JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) {
@@ -11,14 +12,14 @@ JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) 
             in.get();
         }
 
-        _correspondingKeys.pushBack(parseValue(in));
+        String key(parseValue(in));
 
         while(true) {
             char currentChar = (char)in.peek();
 
             if (currentChar == '\"') {
 
-                _jsonNodeCollection.addJsonNode(JsonNodeType::JSON_STRING, in);
+                _jsonPairs.addJsonPair(std::move(key), JsonNodeType::JSON_STRING, in);
 
                 in.get(currentChar);
 
@@ -33,7 +34,7 @@ JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) 
             if (currentChar == '-' || (currentChar >= '0' && currentChar <= '9')
                 || currentChar == 't' || currentChar == 'f' || currentChar == 'n') {
 
-                _jsonNodeCollection.addJsonNode(JsonNodeType::JSON_VALUE, in);
+                _jsonPairs.addJsonPair(std::move(key), JsonNodeType::JSON_VALUE, in);
 
                 in.get(currentChar);
 
@@ -48,7 +49,7 @@ JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) 
             if (currentChar == '{') {
                 in.get();
 
-                _jsonNodeCollection.addJsonNode(JsonNodeType::JSON_OBJECT, in);
+                _jsonPairs.addJsonPair(std::move(key), JsonNodeType::JSON_OBJECT, in);
 
                 while(true) {
                     currentChar = (char)in.get();
@@ -66,7 +67,7 @@ JsonObject::JsonObject(std::ifstream& in) : JsonNode(JsonNodeType::JSON_OBJECT) 
             if (currentChar == '[') {
                 in.get();
 
-                _jsonNodeCollection.addJsonNode(JsonNodeType::JSON_ARRAY, in);
+                _jsonPairs.addJsonPair(std::move(key), JsonNodeType::JSON_ARRAY, in);
 
                 while(true) {
                     currentChar = (char)in.get();
@@ -91,7 +92,7 @@ JsonNode* JsonObject::clone() const {
 }
 
 void JsonObject::print(unsigned nestingLevel, bool isInArray) const {
-    size_t numberOfPairsInObject = _correspondingKeys.getSize();
+    size_t numberOfPairsInObject = _jsonPairs.getSize();
 
     std::cout << '{' << '\n';
 
@@ -99,9 +100,9 @@ void JsonObject::print(unsigned nestingLevel, bool isInArray) const {
 
         printIndentation(nestingLevel + 1);
 
-        std::cout << '\"' << _correspondingKeys[i] << '\"' << ':' << ' ';
+        std::cout << '\"' << _jsonPairs.getKey(i) << '\"' << ':' << ' ';
 
-        _jsonNodeCollection[i]->print(nestingLevel + 1, false);
+        _jsonPairs.getJsonNode(i)->print(nestingLevel + 1, false);
 
         if(i == numberOfPairsInObject - 1) {
             std::cout << '\n';
@@ -118,22 +119,22 @@ void JsonObject::print(unsigned nestingLevel, bool isInArray) const {
 
 void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
 
-    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+    for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
 
-        if(_correspondingKeys[i] == keyStr) {
-            searchResults.add(_jsonNodeCollection[i]);
+        if(_jsonPairs.getKey(i) == keyStr) {
+            searchResults.add(_jsonPairs.getJsonNode(i));
         }
 
-        JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(i);
+        JsonNodeType nodeType = _jsonPairs.getJsonNode(i)->getType();
 
         if(nodeType == JsonNodeType::JSON_OBJECT) {
-            auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[i].operator->();
+            auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(i).get();
 
             jsonObjectPtr->search(searchResults, keyStr);
         }
 
         if(nodeType == JsonNodeType::JSON_ARRAY) {
-            auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[i].operator->();
+            auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(i).get();
 
             jsonArrayPtr->search(searchResults, keyStr);
         }
@@ -142,9 +143,9 @@ void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
 
 long long JsonObject::findKeyIndex(const String& key) const {
 
-    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+    for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
 
-        if(key == _correspondingKeys[i]) {
+        if(key == _jsonPairs.getKey(i)) {
             return i;
         }
     }
@@ -163,9 +164,9 @@ void JsonObject::assertKey(const char* key) {
 void JsonObject::assertNewKey(const char* newKey) const {
     assertKey(newKey);
 
-    for(unsigned i = 0; i < _correspondingKeys.getSize(); ++i) {
+    for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
 
-        if(strcmp(newKey, _correspondingKeys[i].getData()) == 0) {
+        if(strcmp(newKey, _jsonPairs.getKey(i).getData()) == 0) {
             throw std::invalid_argument("Given key matches at least one other key in current object");
         }
     }
@@ -185,22 +186,59 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
     }
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        _jsonNodeCollection[keyIndex] = new JsonString(String(newStr));
+        _jsonPairs.accessJsonNode(keyIndex).reset(JsonStringFactory::create(newStr));
         return;
     }
 
-    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+    JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
 
     if(nodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(keyIndex).get();
 
         jsonObjectPtr->set(path, newStr, nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
 
         jsonArrayPtr->set(path, newStr, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
+
+        throw std::out_of_range("Given path exceeds valid nesting level");
+    }
+}
+
+Pair<String, SharedPtr<JsonNode>> JsonObject::remove(const char* path, unsigned nestingLevel) {
+    String key = getKeyInPath(path, nestingLevel);
+    assertKey(key.getData());
+
+    long long keyIndex = findKeyIndex(key);
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+
+    if(nestingLevel == lastNestingLevelInPath(path)) {
+        return _jsonPairs.removeJsonPairByIndex(keyIndex);
+    }
+
+    JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
+
+    if(nodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(keyIndex).get();
+
+        return jsonObjectPtr->remove(path, nestingLevel + 1);
+    }
+
+    if(nodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
+
+        return jsonArrayPtr->remove(path, nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
@@ -215,8 +253,7 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
     if(isAddressingStartingNode || ((nestingLevel - 1) == lastNestingLevelInPath(path) && !createInArray)) {
         assertNewKey(newKey);
 
-        _correspondingKeys.pushBack(String(newKey));
-        _jsonNodeCollection.addJsonNode(new JsonString(newStr));
+        _jsonPairs.addJsonStringPair(newKey, newStr);
         return;
     }
 
@@ -232,16 +269,16 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
         throw std::invalid_argument(message.getData());
     }
 
-    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+    JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
 
     if(nodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(keyIndex).get();
 
         jsonObjectPtr->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
 
         jsonArrayPtr->create(path, false, createInArray, newKey, newStr, nestingLevel + 1);
     }
@@ -251,8 +288,15 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
 }
+/*
+void JsonObject::move(const char* path, bool isAddressingStartingNode, bool moveInArray,
+                      const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel) {
 
-void JsonObject::remove(const char* path, unsigned nestingLevel) {
+    if(isAddressingStartingNode || ((nestingLevel - 1) == lastNestingLevelInPath(path) && !moveInArray)) {
+        _jsonPairs.addJsonPair(movedKey, std::move(jsonNodeForMoving));
+        return;
+    }
+
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
@@ -265,24 +309,18 @@ void JsonObject::remove(const char* path, unsigned nestingLevel) {
         throw std::invalid_argument(message.getData());
     }
 
-    if(nestingLevel == lastNestingLevelInPath(path)) {
-        _correspondingKeys.popAt(keyIndex);
-        _jsonNodeCollection.removeJsonNodeByIndex(keyIndex);
-        return;
-    }
-
-    JsonNodeType nodeType = _jsonNodeCollection.getTypeByIndex(keyIndex);
+    JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
 
     if(nodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _jsonPairs.getJsonNode(keyIndex).get();
 
-        jsonObjectPtr->remove(path, nestingLevel + 1);
+        jsonObjectPtr->move(path, false, moveInArray, movedKey, std::move(jsonNodeForMoving), nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _jsonNodeCollection[keyIndex].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _jsonPairs.getJsonNode(keyIndex).get();
 
-        jsonArrayPtr->remove(path, nestingLevel + 1);
+        jsonArrayPtr->move(path, false, moveInArray, movedKey, std::move(jsonNodeForMoving), nestingLevel + 1);
     }
 
     if(nodeType == JsonNodeType::JSON_STRING || nodeType == JsonNodeType::JSON_VALUE) {
@@ -290,3 +328,4 @@ void JsonObject::remove(const char* path, unsigned nestingLevel) {
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
 }
+*/
