@@ -174,6 +174,11 @@ bool String::isNaturalNumber() const {
     return true;
 }
 
+bool String::isEmpty() const {
+
+    return getLength() == 0;
+}
+
 String String::substring(size_t begin, size_t substringLength) const {
     if (begin + substringLength > getLength()) {
         throw std::length_error("Error, substring is out of range");

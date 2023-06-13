@@ -53,6 +53,7 @@ public:
     char operator[](size_t index) const;
 
     bool isNaturalNumber() const;
+    bool isEmpty() const;
 
     friend String operator+(const String& lhs, const String& rhs);
     friend String operator+(const String& lhs, char symbol);
