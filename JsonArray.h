@@ -1,10 +1,11 @@
 #pragma once
 #include "Vector.hpp"
-#include "JsonNodeCollection.h"
+#include "Pair.hpp"
+#include "JsonNodeContainer.h"
 
 class JsonArray : public JsonNode {
 private:
-    JsonNodeCollection _jsonNodeCollection;
+    JsonNodeContainer _jsonNodeCollection;
 
     static void assertNaturalNumberFromStr(const String& index, unsigned nestingLevel);
     void assertIndex(size_t index, unsigned nestingLevel) const;
@@ -24,7 +25,10 @@ public:
     void search(JsonArray& searchResults, const String& keyStr) const;
 
     void set(const char* path, const char* newStr, unsigned nestingLevel);
+    Pair<String, SharedPtr<JsonNode>> remove(const char* path, unsigned nestingLevel);
+
     void create(const char* path, bool isAddressingStartingNode, bool createInArray,
                 const char* newKey, const char* newStr, unsigned nestingLevel);
-    void remove(const char* path, unsigned nestingLevel);
+    //void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
+    //          const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
 };
