@@ -17,6 +17,7 @@ private:
 
     void create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr);
     void move(const char* pathFrom, const char* pathTo, bool isAddressingStartingNode, bool moveInArray);
+    void save(const char* path, bool isAddressingStartingNode, const char* fileName) const;
 
     JsonParser() = default;
 
@@ -43,4 +44,9 @@ public:
     void moveBetweenArrays(const char* pathFrom, const char* pathTo);
     void moveToStartingObject(const char* pathFrom);
     void moveBetweenObjects(const char* pathFrom, const char* pathTo);
+
+    void save() const;
+    void save(const char* path) const;
+    void saveAs(const char* fileName) const;
+    void saveAs(const char* fileName, const char* path) const;
 };

@@ -44,6 +44,7 @@ void JsonParser::openFile(const char* fileName) {
     _fileIsOpened = true;
 
     assertJsonFileName(fileName);
+    _fileName = String(fileName);
 
     std::ifstream in(fileName);
 
@@ -234,4 +235,61 @@ void JsonParser::moveToStartingObject(const char* pathFrom) {
 
 void JsonParser::moveBetweenObjects(const char* pathFrom, const char* pathTo) {
     move(pathFrom, pathTo, false, false);
+}
+
+void JsonParser::save(const char* path, bool isAddressingStartingNode, const char* fileName) const {
+    assertOpenFile();
+    assertJsonFileName(fileName);
+
+    std::ofstream out(fileName);
+
+    if(!out.is_open()) {
+        throw std::ofstream::failure("Unable to open file");
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        if(isAddressingStartingNode) {
+            jsonObjectPtr->save(out, 0, false);
+            return;
+        }
+
+        jsonObjectPtr->savePath(path, out, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        if(isAddressingStartingNode) {
+            jsonArrayPtr->save(out, 0, false);
+            return;
+        }
+
+        jsonArrayPtr->savePath(path, out, 0);
+    }
+}
+
+void JsonParser::save() const {
+    save("", true, _fileName.getData());
+}
+
+void JsonParser::save(const char* path) const {
+    save(path, false, _fileName.getData());
+}
+
+void JsonParser::saveAs(const char* fileName) const {
+    if(strcmp(fileName, _fileName.getData()) == 0) {
+        throw std::invalid_argument("Given file name matches the one of the currently opened file");
+    }
+
+    save("", true, fileName);
+}
+
+void JsonParser::saveAs(const char* fileName, const char* path) const {
+    if(strcmp(fileName, _fileName.getData()) == 0) {
+        throw std::invalid_argument("Given file name matches the one of the currently opened file");
+    }
+
+    save(path, false, fileName);
 }
