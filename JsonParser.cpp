@@ -5,6 +5,8 @@
 #include "constants.h"
 #include <cstring>
 
+JsonParser* JsonParser::instance = nullptr;
+
 void JsonParser::assertJsonFileName(const char* fileName) {
     String name(fileName);
     String extension(JSON_FILE_EXTENSION);
@@ -15,11 +17,32 @@ void JsonParser::assertJsonFileName(const char* fileName) {
     }
 }
 
-JsonParser::JsonParser(const char* fileName) {
-    setFile(fileName);
+void JsonParser::assertOpenFile() const {
+    if(!_fileIsOpened) {
+        throw std::runtime_error("There is no open file");
+    }
 }
 
-void JsonParser::setFile(const char* fileName) {
+JsonParser* JsonParser::getInstance() {
+    if(instance == nullptr) {
+        instance = new JsonParser();
+    }
+
+    return instance;
+}
+
+void JsonParser::freeInstance() {
+    delete instance;
+    instance = nullptr;
+}
+
+void JsonParser::openFile(const char* fileName) {
+    if(_fileIsOpened) {
+        throw std::runtime_error("Close open file before opening a new one");
+    }
+
+    _fileIsOpened = true;
+
     assertJsonFileName(fileName);
 
     std::ifstream in(fileName);
@@ -47,12 +70,24 @@ void JsonParser::setFile(const char* fileName) {
     }
 }
 
+void JsonParser::closeFile() {
+    if(!_fileIsOpened) {
+        throw std::runtime_error("There is not an open file to close");
+    }
+
+    _fileIsOpened = false;
+}
+
 void JsonParser::print() const {
+    assertOpenFile();
+
     _startingNode[0]->print(0, false);
     std::cout << std::endl;
 }
 
 void JsonParser::search(const char* key) const {
+    assertOpenFile();
+
     JsonArray searchResults;
     String keyStr(key);
 
@@ -88,6 +123,7 @@ void JsonParser::assertString(const char* str) {
 }
 
 void JsonParser::set(const char* path, const char* newStr) {
+    assertOpenFile();
     assertString(newStr);
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
@@ -120,6 +156,7 @@ void JsonParser::createInObject(const char* path, const char* newKey, const char
 }
 
 void JsonParser::create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr) {
+    assertOpenFile();
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
@@ -135,6 +172,7 @@ void JsonParser::create(const char* path, bool isAddressingStartingNode, bool cr
 }
 
 void JsonParser::remove(const char* path) {
+    assertOpenFile();
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
@@ -148,3 +186,19 @@ void JsonParser::remove(const char* path) {
         jsonArrayPtr->remove(path, 0);
     }
 }
+/*
+void JsonParser::move(const char* path) {
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+
+        jsonObjectPtr->remove(path, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+
+        jsonArrayPtr->remove(path, 0);
+    }
+}
+*/
