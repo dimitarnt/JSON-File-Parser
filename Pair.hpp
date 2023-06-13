@@ -1,0 +1,70 @@
+#pragma once
+
+template<typename T, typename D>
+class Pair{
+    T first;
+    D second;
+
+public:
+    Pair() = default;
+    Pair(const T& first, const D& second);
+    Pair(T&& first, D&& second);
+    Pair(const T& first, D&& second);
+    Pair(T&& first, const D& second);
+
+    const T& getFirst() const;
+    const D& getSecond() const;
+
+    T& accessFirst();
+    D& accessSecond();
+
+    void setFirst(const T& newValue);
+    void setSecond(const D& newValue);
+};
+
+template<typename T, typename D>
+Pair<T,D>::Pair(const T& first, const D& second) : first(first), second(second) {}
+
+template<typename T, typename D>
+Pair<T,D>::Pair(T&& first, D&& second) : first(std::move(first)), second(std::move(second)) {}
+
+template<typename T, typename D>
+Pair<T,D>::Pair(const T& first, D&& second) : first(first), second(std::move(second)) {}
+
+template<typename T, typename D>
+Pair<T,D>::Pair(T&& first, const D& second) : first(std::move(first)), second(second) {}
+
+template<typename T, typename D>
+const T& Pair<T, D>::getFirst() const {
+
+    return first;
+}
+template<typename T, typename D>
+const D& Pair<T, D>::getSecond() const {
+
+    return second;
+}
+
+template<typename T, typename D>
+T& Pair<T, D>::accessFirst() {
+
+    return first;
+}
+
+template<typename T, typename D>
+D& Pair<T, D>::accessSecond() {
+
+    return second;
+}
+
+template<typename T, typename D>
+void Pair<T, D>::setFirst(const T& newValue) {
+
+    first = newValue;
+}
+
+template<typename T, typename D>
+void Pair<T, D>::setSecond(const D& newValue) {
+
+    second = newValue;
+}
