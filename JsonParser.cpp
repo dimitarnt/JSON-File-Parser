@@ -92,13 +92,13 @@ void JsonParser::search(const char* key) const {
     String keyStr(key);
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
         jsonObjectPtr->search(searchResults, keyStr);
     }
 
     if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
         jsonArrayPtr->search(searchResults, keyStr);
     }
@@ -127,15 +127,47 @@ void JsonParser::set(const char* path, const char* newStr) {
     assertString(newStr);
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
         jsonObjectPtr->set(path, newStr, 0);
     }
 
     if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
         jsonArrayPtr->set(path, newStr, 0);
+    }
+}
+
+void JsonParser::remove(const char* path) {
+    assertOpenFile();
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->remove(path, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->remove(path, 0);
+    }
+}
+
+void JsonParser::create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr) {
+    assertOpenFile();
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
     }
 }
 
@@ -146,6 +178,7 @@ void JsonParser::createInArray(const char* path, const char* newStr) {
 void JsonParser::createInStartingObject(const char* newKey, const char* newStr) {
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         create("", true, false, newKey, newStr);
+        return;
     }
 
     throw std::logic_error("Starting Json Node is not a Json Object");
@@ -155,50 +188,50 @@ void JsonParser::createInObject(const char* path, const char* newKey, const char
     create(path, false, false, newKey, newStr);
 }
 
-void JsonParser::create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr) {
-    assertOpenFile();
+void JsonParser::move(const char* pathFrom, const char* pathTo, bool isAddressingStartingNode, bool moveInArray) {
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        jsonObjectPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+        Pair<String, SharedPtr<JsonNode>> jsonPairForMoving = jsonObjectPtr->remove(pathFrom, 0);
+
+        if(jsonPairForMoving.getFirst().isEmpty()) {
+            jsonObjectPtr->move(pathTo, isAddressingStartingNode, moveInArray, "", std::move(jsonPairForMoving.accessSecond()), 0);
+            return;
+        }
+
+        jsonObjectPtr->move(pathTo, isAddressingStartingNode, moveInArray, jsonPairForMoving.accessFirst().getData(),
+                            std::move(jsonPairForMoving.accessSecond()), 0);
     }
 
     if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        jsonArrayPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+        Pair<String, SharedPtr<JsonNode>> jsonPairForMoving = jsonArrayPtr->remove(pathFrom, 0);
+
+        if(jsonPairForMoving.getFirst().isEmpty()) {
+            jsonArrayPtr->move(pathTo, isAddressingStartingNode, moveInArray, "", std::move(jsonPairForMoving.accessSecond()), 0);
+            return;
+        }
+
+        jsonArrayPtr->move(pathTo, isAddressingStartingNode, moveInArray, jsonPairForMoving.accessFirst().getData(),
+                            std::move(jsonPairForMoving.accessSecond()), 0);
     }
 }
 
-void JsonParser::remove(const char* path) {
-    assertOpenFile();
+void JsonParser::moveBetweenArrays(const char* pathFrom, const char* pathTo) {
+    move(pathFrom, pathTo, false, true);
+}
 
+void JsonParser::moveToStartingObject(const char* pathFrom) {
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
-
-        jsonObjectPtr->remove(path, 0);
+        move(pathFrom, "", true, false);
+        return;
     }
 
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
-
-        jsonArrayPtr->remove(path, 0);
-    }
+    throw std::logic_error("Starting Json Node is not a Json Object");
 }
-/*
-void JsonParser::move(const char* path) {
 
-    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].operator->();
-
-        jsonObjectPtr->remove(path, 0);
-    }
-
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].operator->();
-
-        jsonArrayPtr->remove(path, 0);
-    }
+void JsonParser::moveBetweenObjects(const char* pathFrom, const char* pathTo) {
+    move(pathFrom, pathTo, false, false);
 }
-*/

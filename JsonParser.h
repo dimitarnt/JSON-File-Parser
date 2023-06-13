@@ -16,6 +16,7 @@ private:
     void assertOpenFile() const;
 
     void create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr);
+    void move(const char* pathFrom, const char* pathTo, bool isAddressingStartingNode, bool moveInArray);
 
     JsonParser() = default;
 
@@ -33,9 +34,13 @@ public:
     void search(const char* key) const;
 
     void set(const char* path, const char* newStr);
+    void remove(const char* path);
+
     void createInArray(const char* path, const char* newStr);
     void createInStartingObject(const char* newKey, const char* newStr);
     void createInObject(const char* path, const char* newKey, const char* newStr);
-    void remove(const char* path);
-    //void move(const char* path);
+
+    void moveBetweenArrays(const char* pathFrom, const char* pathTo);
+    void moveToStartingObject(const char* pathFrom);
+    void moveBetweenObjects(const char* pathFrom, const char* pathTo);
 };
