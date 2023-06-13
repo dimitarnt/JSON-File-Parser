@@ -14,6 +14,10 @@ void JsonString::print(unsigned nestingLevel, bool isInArray) const {
     std::cout << '\"' << _value << '\"';
 }
 
+void JsonString::save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const {
+    out << '\"' << _value << '\"';
+}
+
 JsonNode* JsonString::clone() const {
     return new JsonString(*this);
 }

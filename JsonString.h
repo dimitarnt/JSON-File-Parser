@@ -14,6 +14,7 @@ public:
     explicit JsonString(const char* value);
 
     void print(unsigned nestingLevel, bool isInArray) const override;
+    void save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const override;
 
     JsonNode* clone() const override;
 };
