@@ -25,6 +25,6 @@ public:
 
     void create(const char* path, bool isAddressingStartingNode, bool createInArray,
                 const char* newKey, const char* newStr, unsigned nestingLevel);
-    //void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
-    //          const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
+    void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
+              const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
 };

@@ -288,7 +288,7 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
 }
-/*
+
 void JsonObject::move(const char* path, bool isAddressingStartingNode, bool moveInArray,
                       const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel) {
 
@@ -328,4 +328,3 @@ void JsonObject::move(const char* path, bool isAddressingStartingNode, bool move
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
 }
-*/
