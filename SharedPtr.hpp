@@ -104,12 +104,13 @@ T* SharedPtr<T>::get() const {
 
 template<typename T>
 void SharedPtr<T>::reset(T* dataPtr) {
-    if (this->data == data) {
+    if (this->data == dataPtr) {
         return;
     }
 
     free();
-    this->data = data;
+
+    this->data = dataPtr;
     if (this->data) {
         counter = new size_t(1);
     }
