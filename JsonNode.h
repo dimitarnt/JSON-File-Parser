@@ -25,10 +25,12 @@ public:
 
     JsonNodeType getType() const;
 
-    static String parseValue(std::ifstream& in);
-
     virtual void print(unsigned nestingLevel, bool isInArray) const = 0;
+    virtual void save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const = 0;
+
+    static String parseValue(std::ifstream& in);
     static void printIndentation(unsigned nestingLevel);
+    static void putIndentationInFile(std::ofstream& out, unsigned nestingLevel);
 
     static unsigned lastNestingLevelInPath(const char* path);
     static String getKeyInPath(const char* path, unsigned nestingLevel);

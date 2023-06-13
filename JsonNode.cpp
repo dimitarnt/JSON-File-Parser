@@ -74,6 +74,16 @@ void JsonNode::printIndentation(unsigned nestingLevel) {
     }
 }
 
+void JsonNode::putIndentationInFile(std::ofstream& out, unsigned nestingLevel) {
+
+    for(unsigned i = 0; i < nestingLevel; ++i) {
+
+        for(unsigned j = 0; j < NUMBER_OF_INDENTATION_SPACES; ++j) {
+            out << ' ';
+        }
+    }
+}
+
 unsigned JsonNode::lastNestingLevelInPath(const char* path) {
     size_t pathLength = strlen(path);
 
