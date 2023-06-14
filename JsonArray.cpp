@@ -101,7 +101,7 @@ void JsonArray::print(unsigned nestingLevel, bool isInArray) const {
 
         printIndentation(nestingLevel + 1);
 
-        _jsonNodeCollection[i]->print(nestingLevel, true);
+        _jsonNodeCollection[i]->print(nestingLevel + 1, true);
 
         if(i == numberOfElementsInArray - 1) {
             std::cout << '\n';
@@ -125,7 +125,7 @@ void JsonArray::save(std::ofstream& out, unsigned nestingLevel, bool isInArray) 
 
         putIndentationInFile(out, nestingLevel + 1);
 
-        _jsonNodeCollection[i]->save(out, nestingLevel, true);
+        _jsonNodeCollection[i]->save(out, nestingLevel + 1, true);
 
         if(i == numberOfElementsInArray - 1) {
             out << '\n';
@@ -217,7 +217,7 @@ void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel)
     assertIndex(index, nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        _jsonNodeCollection[index].reset(JsonStringFactory::create(newStr));
+        _jsonNodeCollection[index] = JsonStringFactory::create(newStr);
         return;
     }
 
