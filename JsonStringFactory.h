@@ -4,9 +4,9 @@
 
 class JsonStringFactory : public JsonNodeFactory {
 public:
-    JsonNode* create(std::ifstream& in) const override;
+    SharedPtr<JsonNode> create(std::ifstream& in) const override;
 
-    static JsonNode* create(const String& value);
-    static JsonNode* create(String&& value);
-    static JsonNode* create(const char* value);
+    static SharedPtr<JsonNode> create(const String& value);
+    static SharedPtr<JsonNode> create(String&& value);
+    static SharedPtr<JsonNode> create(const char* value);
 };

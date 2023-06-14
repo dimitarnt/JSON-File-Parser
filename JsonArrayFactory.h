@@ -3,5 +3,5 @@
 
 class JsonArrayFactory : public JsonNodeFactory {
 public:
-    JsonNode* create(std::ifstream& in) const override;
+    SharedPtr<JsonNode> create(std::ifstream& in) const override;
 };
