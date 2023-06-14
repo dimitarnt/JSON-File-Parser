@@ -11,6 +11,9 @@ private:
     void assertIndex(size_t index, unsigned nestingLevel) const;
     void assertExtendedIndex(size_t index, unsigned nestingLevel) const;
 
+    static unsigned getIndex(const String& key, unsigned nestingLevel);
+    static unsigned getIndex(String&& key, unsigned nestingLevel);
+
 public:
     JsonArray();
     explicit JsonArray(std::ifstream& in);

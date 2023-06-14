@@ -159,7 +159,29 @@ void JsonArray::search(JsonArray& searchResults, const String& keyStr) const {
     }
 }
 
-void JsonArray::assertNaturalNumberFromStr(const String &index, unsigned int nestingLevel) {
+unsigned JsonArray::getIndex(const String& key, unsigned nestingLevel) {
+    size_t index = 0;
+    size_t digitCount = key.getLength();
+
+    for(size_t i = 0; i < digitCount; ++i) {
+        index += (key[i] - '0') * pow(10, digitCount - i - 1);
+    }
+
+    return index;
+}
+
+unsigned JsonArray::getIndex(String&& key, unsigned nestingLevel) {
+    size_t index = 0;
+    size_t digitCount = key.getLength();
+
+    for(size_t i = 0; i < digitCount; ++i) {
+        index += (key[i] - '0') * pow(10, digitCount - i - 1);
+    }
+
+    return index;
+}
+
+void JsonArray::assertNaturalNumberFromStr(const String &index, unsigned nestingLevel) {
     if(!index.isNaturalNumber()) {
         String message("Invalid index at nesting level ");
         message += nestingLevel;
@@ -177,7 +199,7 @@ void JsonArray::assertIndex(size_t index, unsigned nestingLevel) const {
     }
 }
 
-void JsonArray::assertExtendedIndex(size_t index, unsigned int nestingLevel) const {
+void JsonArray::assertExtendedIndex(size_t index, unsigned nestingLevel) const {
     if(index > _jsonNodeCollection.getSize()) {
         String message("Index is out of range at nesting level ");
         message += nestingLevel;
@@ -190,12 +212,7 @@ void JsonArray::set(const char* path, const char* newStr, unsigned nestingLevel)
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
 
-    size_t index = 0;
-    size_t digitCount = key.getLength();
-
-    for(size_t i = 0; i < digitCount; ++i) {
-        index += (key[i] - '0') * pow(10, digitCount - i - 1);
-    }
+    size_t index = getIndex(std::move(key), nestingLevel);
 
     assertIndex(index, nestingLevel);
 
@@ -228,12 +245,7 @@ Pair<String, SharedPtr<JsonNode>> JsonArray::remove(const char* path, unsigned n
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
 
-    size_t index = 0;
-    size_t digitCount = key.getLength();
-
-    for(size_t i = 0; i < digitCount; ++i) {
-        index += (key[i] - '0') * pow(10, digitCount - i - 1);
-    }
+    size_t index = getIndex(std::move(key), nestingLevel);
 
     assertIndex(index, nestingLevel);
 
@@ -267,12 +279,7 @@ void JsonArray::create(const char* path, bool isAddressingStartingNode, bool cre
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
 
-    size_t index = 0;
-    size_t digitCount = key.getLength();
-
-    for(size_t i = 0; i < digitCount; ++i) {
-        index += (key[i] - '0') * pow(10, digitCount - i - 1);
-    }
+    size_t index = getIndex(std::move(key), nestingLevel);
 
     assertExtendedIndex(index, nestingLevel);
 
@@ -306,12 +313,7 @@ void JsonArray::move(const char* path, bool isAddressingStartingNode, bool moveI
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
 
-    size_t index = 0;
-    size_t digitCount = key.getLength();
-
-    for(size_t i = 0; i < digitCount; ++i) {
-        index += (key[i] - '0') * pow(10, digitCount - i - 1);
-    }
+    size_t index = getIndex(std::move(key), nestingLevel);
 
     assertExtendedIndex(index, nestingLevel);
 
@@ -344,12 +346,7 @@ void JsonArray::savePath(const char* path, std::ofstream& out, unsigned nestingL
     String key = getKeyInPath(path, nestingLevel);
     assertNaturalNumberFromStr(key, nestingLevel);
 
-    size_t index = 0;
-    size_t digitCount = key.getLength();
-
-    for(size_t i = 0; i < digitCount; ++i) {
-        index += (key[i] - '0') * pow(10, digitCount - i - 1);
-    }
+    size_t index = getIndex(std::move(key), nestingLevel);
 
     assertIndex(index, nestingLevel);
 
