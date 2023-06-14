@@ -36,99 +36,64 @@ void JsonValidator::setTokens(std::ifstream& in) {
 
             case 't':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateT(in, buildingOfKeywordTrue);
 
-                if(buildingOfKeywordTrue != 0) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-                buildingOfKeywordTrue = 1;
                 _tokens += currentSymbol;
                 break;
 
             case 'r':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateR(in, buildingOfKeywordTrue);
 
-                if(buildingOfKeywordTrue != 1) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-                buildingOfKeywordTrue = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'u':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateU(in, buildingOfKeywordTrue, buildingOfKeywordNull);
 
-                if(!(buildingOfKeywordTrue == 2 || buildingOfKeywordNull == 1)) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordTrue == 2 ? buildingOfKeywordTrue = 3 : buildingOfKeywordNull = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'e':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateE(in, buildingOfKeywordTrue, buildingOfKeywordFalse);
 
-                if(!(buildingOfKeywordTrue == 3 || buildingOfKeywordFalse == 4)) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordTrue == 3 ? buildingOfKeywordTrue = 0 : buildingOfKeywordFalse = 0;
                 _tokens += currentSymbol;
                 break;
 
             case 'f':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateF(in, buildingOfKeywordFalse);
 
-                if(buildingOfKeywordFalse != 0) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordFalse = 1;
                 _tokens += currentSymbol;
                 break;
 
             case 'a':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateA(in, buildingOfKeywordFalse);
 
-                if(buildingOfKeywordFalse != 1) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordFalse = 2;
                 _tokens += currentSymbol;
                 break;
 
             case 'l':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateL(in, buildingOfKeywordFalse, buildingOfKeywordNull);
 
-                if(!(buildingOfKeywordFalse == 2 || buildingOfKeywordNull == 2 || buildingOfKeywordNull == 3)) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordFalse == 2 ? buildingOfKeywordFalse = 3 :
-                (buildingOfKeywordNull == 2 ? buildingOfKeywordNull = 3 : buildingOfKeywordNull = 0);
                 _tokens += currentSymbol;
                 break;
 
             case 's':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateS(in, buildingOfKeywordFalse);
 
-                if(buildingOfKeywordFalse != 3) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordFalse = 4;
                 _tokens += currentSymbol;
                 break;
 
             case 'n':
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
+                validateN(in, buildingOfKeywordNull);
 
-                if(buildingOfKeywordNull != 0) {
-                    throwOutOfPlaceCharacterException(in);
-                }
-
-                buildingOfKeywordNull = 1;
                 _tokens += currentSymbol;
                 break;
 
@@ -188,10 +153,7 @@ void JsonValidator::setTokens(std::ifstream& in) {
                 validateBoolBuildingInterception(in, buildingOfKeywordTrue, buildingOfKeywordFalse, buildingOfKeywordNull);
                 validateNumberBuildingInterception(in, numberIsBeingBuilt);
 
-                String message("Non-token character is out of quotation marks at row ");
-                message += getLinesCount(in, in.tellg());
-
-                throw InvalidJsonSyntax(message);
+                throwNonTokenCharacterException(in);
         }
     }
     in.clear();
@@ -202,6 +164,13 @@ void JsonValidator::setTokens(std::ifstream& in) {
 
 void JsonValidator::throwOutOfPlaceCharacterException(std::ifstream& in) {
     String message("Out of place character at row ");
+    message += getLinesCount(in, in.tellg());
+
+    throw InvalidJsonSyntax(message);
+}
+
+void JsonValidator::throwNonTokenCharacterException(std::ifstream& in) {
+    String message("Non-token character is out of quotation marks at row ");
     message += getLinesCount(in, in.tellg());
 
     throw InvalidJsonSyntax(message);
@@ -227,6 +196,77 @@ void JsonValidator::validateNumberBuildingInterception(std::ifstream& in, bool n
 
         throw InvalidJsonSyntax(message);
     }
+}
+
+void JsonValidator::validateT(std::ifstream& in, unsigned& buildingOfKeywordTrue) {
+    if(buildingOfKeywordTrue != 0) {
+        throwOutOfPlaceCharacterException(in);
+    }
+    buildingOfKeywordTrue = 1;
+}
+
+void JsonValidator::validateR(std::ifstream& in, unsigned& buildingOfKeywordTrue) {
+    if(buildingOfKeywordTrue != 1) {
+        throwOutOfPlaceCharacterException(in);
+    }
+    buildingOfKeywordTrue = 2;
+}
+
+void JsonValidator::validateU(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordNull) {
+    if(!(buildingOfKeywordTrue == 2 || buildingOfKeywordNull == 1)) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordTrue == 2 ? buildingOfKeywordTrue = 3 : buildingOfKeywordNull = 2;
+}
+
+void JsonValidator::validateE(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordFalse) {
+    if(!(buildingOfKeywordTrue == 3 || buildingOfKeywordFalse == 4)) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordTrue == 3 ? buildingOfKeywordTrue = 0 : buildingOfKeywordFalse = 0;
+}
+
+void JsonValidator::validateF(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+    if(buildingOfKeywordFalse != 0) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordFalse = 1;
+}
+
+void JsonValidator::validateA(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+    if(buildingOfKeywordFalse != 1) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordFalse = 2;
+}
+
+void JsonValidator::validateL(std::ifstream& in, unsigned& buildingOfKeywordFalse, unsigned& buildingOfKeywordNull) {
+    if(!(buildingOfKeywordFalse == 2 || buildingOfKeywordNull == 2 || buildingOfKeywordNull == 3)) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordFalse == 2 ? buildingOfKeywordFalse = 3 :
+    (buildingOfKeywordNull == 2 ? buildingOfKeywordNull = 3 : buildingOfKeywordNull = 0);
+}
+
+void JsonValidator::validateS(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+    if(buildingOfKeywordFalse != 3) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordFalse = 4;
+}
+
+void JsonValidator::validateN(std::ifstream& in, unsigned& buildingOfKeywordNull) {
+    if(buildingOfKeywordNull != 0) {
+        throwOutOfPlaceCharacterException(in);
+    }
+
+    buildingOfKeywordNull = 1;
 }
 
 long long JsonValidator::getLastPositionOfToken(char token, unsigned fromIndex) const {
@@ -292,17 +332,137 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
 }
 
 bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
-                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
+                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
+                                             unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
 
-    return lastPositionOfClosedBracket >= lastPositionOfOpenBracket && lastPositionOfOpenBrace >= lastPositionOfOpenBracket
-           && lastPositionOfOpenBrace >= lastPositionOfClosedBrace;
+    if(lastPositionOfOpenBrace > lastPositionOfClosedBrace && lastPositionOfOpenBrace > lastPositionOfOpenBracket
+        && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
+
+        if(nestedJsonObjectCount == 0 && nestedJsonArrayCount == 0) {
+            return true;
+        }
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfOpenBrace - 1);
+
+
+        return tokenIsInJsonObjectScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount - 1, nestedJsonArrayCount);
+    }
+
+    if(lastPositionOfOpenBracket > lastPositionOfClosedBracket && lastPositionOfOpenBracket > lastPositionOfOpenBrace
+        && lastPositionOfOpenBracket > lastPositionOfClosedBrace) {
+
+        if(nestedJsonObjectCount == 0 && nestedJsonArrayCount == 0) {
+            return false;
+        }
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfOpenBracket - 1);
+
+
+        return tokenIsInJsonObjectScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount, nestedJsonArrayCount - 1);
+    }
+
+    if(lastPositionOfClosedBrace > lastPositionOfOpenBrace && lastPositionOfClosedBrace > lastPositionOfOpenBracket
+        && lastPositionOfClosedBrace > lastPositionOfClosedBracket) {
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfClosedBrace - 1);
+
+
+        return tokenIsInJsonObjectScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount + 1, nestedJsonArrayCount);
+    }
+
+    if(lastPositionOfClosedBracket > lastPositionOfOpenBracket && lastPositionOfClosedBracket > lastPositionOfOpenBrace
+        && lastPositionOfClosedBracket > lastPositionOfClosedBrace) {
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfClosedBracket - 1);
+
+
+        return tokenIsInJsonObjectScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount, nestedJsonArrayCount + 1);
+    }
+
+    return false;
 }
 
 bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
-                                            long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket) {
+                                            long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
+                                            unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
 
-    return lastPositionOfClosedBrace >= lastPositionOfOpenBrace && lastPositionOfOpenBracket >= lastPositionOfOpenBrace
-           && lastPositionOfOpenBracket >= lastPositionOfClosedBracket;
+    if(lastPositionOfOpenBrace > lastPositionOfClosedBrace && lastPositionOfOpenBrace > lastPositionOfOpenBracket
+       && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
+
+        if(nestedJsonObjectCount == 0 && nestedJsonArrayCount == 0) {
+            return false;
+        }
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfOpenBrace - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfOpenBrace - 1);
+
+
+        return tokenIsInJsonArrayScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount - 1, nestedJsonArrayCount);
+    }
+
+    if(lastPositionOfOpenBracket > lastPositionOfClosedBracket && lastPositionOfOpenBracket > lastPositionOfOpenBrace
+       && lastPositionOfOpenBracket > lastPositionOfClosedBrace) {
+
+        if(nestedJsonObjectCount == 0 && nestedJsonArrayCount == 0) {
+            return true;
+        }
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfOpenBracket - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfOpenBracket - 1);
+
+
+        return tokenIsInJsonArrayScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount, nestedJsonArrayCount - 1);
+    }
+
+    if(lastPositionOfClosedBrace > lastPositionOfOpenBrace && lastPositionOfClosedBrace > lastPositionOfOpenBracket
+       && lastPositionOfClosedBrace > lastPositionOfClosedBracket) {
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfClosedBrace - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfClosedBrace - 1);
+
+
+        return tokenIsInJsonArrayScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount + 1, nestedJsonArrayCount);
+    }
+
+    if(lastPositionOfClosedBracket > lastPositionOfOpenBracket && lastPositionOfClosedBracket > lastPositionOfOpenBrace
+       && lastPositionOfClosedBracket > lastPositionOfClosedBrace) {
+
+        long long newLastPositionOfOpenBrace = getLastPositionOfToken('{', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfClosedBrace = getLastPositionOfToken('}', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfOpenBracket = getLastPositionOfToken('[', lastPositionOfClosedBracket - 1);
+        long long newLastPositionOfClosedBracket = getLastPositionOfToken(']', lastPositionOfClosedBracket - 1);
+
+
+        return tokenIsInJsonArrayScope(newLastPositionOfOpenBrace, newLastPositionOfClosedBrace, newLastPositionOfOpenBracket,
+                                        newLastPositionOfClosedBracket, nestedJsonObjectCount, nestedJsonArrayCount + 1);
+    }
+
+    return false;
 }
 
 bool JsonValidator::validTokenBeforeOpenBrace(char token) {
@@ -443,6 +603,20 @@ void JsonValidator::validateBracePlacement() const {
 
             throw InvalidJsonSyntax(message);
         }
+
+        long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfClosedBrace - 1);
+        long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfClosedBrace - 1);
+        long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfClosedBrace - 1);
+        long long lastPositionOfClosedBracket = getLastPositionOfToken(']', positionOfClosedBrace - 1);
+
+        if(lastPositionOfOpenBracket > lastPositionOfOpenBrace && lastPositionOfOpenBracket > lastPositionOfClosedBrace
+            && lastPositionOfOpenBracket > lastPositionOfClosedBracket) {
+
+            String message("Out of place closed brace at row ");
+            message += getRowPositionOfToken(positionOfClosedBrace);
+
+            throw InvalidJsonSyntax(message);
+        }
     }
 }
 
@@ -495,6 +669,20 @@ void JsonValidator::validateBracketPlacement() const {
 
             throw InvalidJsonSyntax(message);
         }
+
+        long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfClosedBracket - 1);
+        long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfClosedBracket - 1);
+        long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfClosedBracket - 1);
+        long long lastPositionOfClosedBracket = getLastPositionOfToken(']', positionOfClosedBracket - 1);
+
+        if(lastPositionOfOpenBrace > lastPositionOfOpenBracket && lastPositionOfOpenBrace > lastPositionOfClosedBrace
+           && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
+
+            String message("Out of place closed brace at row ");
+            message += getRowPositionOfToken(positionOfClosedBracket);
+
+            throw InvalidJsonSyntax(message);
+        }
     }
 }
 
@@ -513,7 +701,7 @@ void JsonValidator::validateDigitPlacement() const {
             char previousToken = getPrecedingNonNewLineTokens(positionOfCurrentDigit, 1);
             char nextToken = getNextNonNewLineToken(positionOfCurrentDigit);
 
-            if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
+            if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
 
                 if(('0' + i) == '0' && (!validZeroPlacementInJsonObject(previousToken, nextToken) || !validTokenBeforeDigitInJsonObject(previousToken))) {
                     String message("Out of place 0 at row ");
@@ -530,7 +718,7 @@ void JsonValidator::validateDigitPlacement() const {
                 }
             }
 
-            if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
+            if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
 
                 if(('0' + i) == '0' && (!validZeroPlacementInJsonArray(previousToken, nextToken) || !validTokenBeforeDigitInJsonArray(previousToken))) {
                     String message("Out of place 0 at row ");
@@ -581,7 +769,7 @@ void JsonValidator::validateMinusPlacement() const {
         char previousToken = getPrecedingNonNewLineTokens(positionOfMinuses, 1);
         char nextToken = getNextNonNewLineToken(positionOfMinuses);
 
-        if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)
+        if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)
            && !validTokenBeforeMinusInJsonObject(previousToken, nextToken)) {
 
             String message("Out of place minus at row ");
@@ -590,7 +778,7 @@ void JsonValidator::validateMinusPlacement() const {
             throw InvalidJsonSyntax(message);
         }
 
-        if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)
+        if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)
            && !validTokenBeforeMinusInJsonArray(previousToken, nextToken)) {
 
             String message("Out of place minus at row ");
@@ -631,7 +819,7 @@ void JsonValidator::validateValueKeywordPlacement() const {
 
             char previousToken = getPrecedingNonNewLineTokens(positionOfKeyword, 1);
 
-            if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)
+            if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)
                && !validTokenBeforeValueKeywordInJsonObject(previousToken)) {
 
                 String message("Out of place keyword at row ");
@@ -640,7 +828,7 @@ void JsonValidator::validateValueKeywordPlacement() const {
                 throw InvalidJsonSyntax(message);
             }
 
-            if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)
+            if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)
                && !validTokenBeforeValueKeywordInJsonArray(previousToken)) {
 
                 String message("Out of place keyword at row ");
@@ -683,7 +871,7 @@ void JsonValidator::validateColonPlacement() const {
         char previousToken = getPrecedingNonNewLineTokens(positionOfColon, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfColon, 3);
 
-        if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
+        if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
             String message("Out of place colon at row ");
             message += getRowPositionOfToken(positionOfColon);
 
@@ -712,7 +900,7 @@ void JsonValidator::validateCommaPlacement() const {
         char previousToken = getPrecedingNonNewLineTokens(positionOfComma, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfComma, 3);
 
-        if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket)) {
+        if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
 
             if(!validTokensPrecedingCommaInJsonObject(previousToken, tokenThreePositionsBack)) {
                 std::cout << lastPositionOfOpenBrace << '/' << lastPositionOfClosedBrace << '/' << lastPositionOfOpenBracket << '/' << lastPositionOfClosedBracket;

@@ -10,20 +10,35 @@ private:
     void assertIndex(unsigned index) const;
 
     void setTokens(std::ifstream& in);
+
     static void throwOutOfPlaceCharacterException(std::ifstream& in);
+    static void throwNonTokenCharacterException(std::ifstream& in);
+
     static void validateBoolBuildingInterception(std::ifstream& in, unsigned buildingOfTrueKeyword,
                                                  unsigned buildingOfFalseKeyword, unsigned buildingOfNullKeyword);
     static void validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt);
+
+    static void validateT(std::ifstream& in, unsigned& buildingOfKeywordTrue);
+    static void validateR(std::ifstream& in, unsigned& buildingOfKeywordTrue);
+    static void validateU(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordNull);
+    static void validateE(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordFalse);
+    static void validateF(std::ifstream& in, unsigned& buildingOfKeywordFalse);
+    static void validateA(std::ifstream& in, unsigned& buildingOfKeywordFalse);
+    static void validateL(std::ifstream& in, unsigned& buildingOfKeywordFalse, unsigned& buildingOfKeywordNull);
+    static void validateS(std::ifstream& in, unsigned& buildingOfKeywordFalse);
+    static void validateN(std::ifstream& in, unsigned& buildingOfKeywordNull);
 
     long long getLastPositionOfToken(char token, unsigned fromIndex) const;
     char getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const;
     char getNextNonNewLineToken(unsigned index) const;
     unsigned getRowPositionOfToken(unsigned index) const;
 
-    static bool tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
-                                         long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket);
-    static bool tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
-                                        long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket);
+    bool tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
+                                  long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
+                                  unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const;
+    bool tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
+                                 long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
+                                 unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const;
 
     static bool validTokenBeforeOpenBrace(char token);
     static bool validTokenBeforeClosedBrace(char previousToken, char tokenThreePositionsBack);
