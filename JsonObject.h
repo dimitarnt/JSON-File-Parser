@@ -8,9 +8,11 @@ class JsonObject : public JsonNode {
 private:
     JsonPairContainer _jsonPairs;
 
-    long long findKeyIndex(const String& key) const;
     static void assertKey(const char* key);
     void assertNewKey(const char* newKey) const;
+
+    unsigned getKeyIndex(const String& key, unsigned nestingLevel) const;
+    unsigned getKeyIndex(String&& key, unsigned nestingLevel) const;
 
 public:
     JsonObject() = delete;

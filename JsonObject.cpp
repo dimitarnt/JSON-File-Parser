@@ -167,16 +167,44 @@ void JsonObject::search(JsonArray& searchResults, const String& keyStr) const {
     }
 }
 
-long long JsonObject::findKeyIndex(const String& key) const {
+unsigned JsonObject::getKeyIndex(const String& key, unsigned nestingLevel) const {
+    long long keyIndex = -1;
 
     for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
 
         if(key == _jsonPairs.getKey(i)) {
-            return i;
+            keyIndex = i;
         }
     }
 
-    return -1;
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+
+    return keyIndex;
+}
+
+unsigned JsonObject::getKeyIndex(String&& key, unsigned nestingLevel) const {
+    long long keyIndex = -1;
+
+    for(unsigned i = 0; i < _jsonPairs.getSize(); ++i) {
+
+        if(key == _jsonPairs.getKey(i)) {
+            keyIndex = i;
+        }
+    }
+
+    if(keyIndex == -1) {
+        String message("Invalid key at nesting level ");
+        message += nestingLevel;
+
+        throw std::invalid_argument(message.getData());
+    }
+
+    return keyIndex;
 }
 
 void JsonObject::assertKey(const char* key) {
@@ -202,14 +230,7 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
-    long long keyIndex = findKeyIndex(key);
-
-    if(keyIndex == -1) {
-        String message("Invalid key at nesting level ");
-        message += nestingLevel;
-
-        throw std::invalid_argument(message.getData());
-    }
+    unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
         _jsonPairs.accessJsonNode(keyIndex).reset(JsonStringFactory::create(newStr));
@@ -240,14 +261,7 @@ Pair<String, SharedPtr<JsonNode>> JsonObject::remove(const char* path, unsigned 
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
-    long long keyIndex = findKeyIndex(key);
-
-    if(keyIndex == -1) {
-        String message("Invalid key at nesting level ");
-        message += nestingLevel;
-
-        throw std::invalid_argument(message.getData());
-    }
+    unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
         return _jsonPairs.removeJsonPairByIndex(keyIndex);
@@ -286,14 +300,7 @@ void JsonObject::create(const char* path, bool isAddressingStartingNode, bool cr
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
-    long long keyIndex = findKeyIndex(key);
-
-    if(keyIndex == -1) {
-        String message("Invalid key at nesting level ");
-        message += nestingLevel;
-
-        throw std::invalid_argument(message.getData());
-    }
+    unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
 
@@ -319,6 +326,8 @@ void JsonObject::move(const char* path, bool isAddressingStartingNode, bool move
                       const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel) {
 
     if(isAddressingStartingNode || ((nestingLevel - 1) == lastNestingLevelInPath(path) && !moveInArray)) {
+        assertNewKey(movedKey);
+
         _jsonPairs.addJsonPair(movedKey, std::move(jsonNodeForMoving));
         return;
     }
@@ -326,14 +335,7 @@ void JsonObject::move(const char* path, bool isAddressingStartingNode, bool move
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
-    long long keyIndex = findKeyIndex(key);
-
-    if(keyIndex == -1) {
-        String message("Invalid key at nesting level ");
-        message += nestingLevel;
-
-        throw std::invalid_argument(message.getData());
-    }
+    unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     JsonNodeType nodeType = _jsonPairs.getJsonNode(keyIndex)->getType();
 
@@ -359,14 +361,7 @@ void JsonObject::savePath(const char* path, std::ofstream& out, unsigned nesting
     String key = getKeyInPath(path, nestingLevel);
     assertKey(key.getData());
 
-    long long keyIndex = findKeyIndex(key);
-
-    if(keyIndex == -1) {
-        String message("Invalid key at nesting level ");
-        message += nestingLevel;
-
-        throw std::invalid_argument(message.getData());
-    }
+    unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
         _jsonPairs.getJsonNode(keyIndex)->save(out, 0, false);
