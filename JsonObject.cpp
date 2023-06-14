@@ -233,7 +233,7 @@ void JsonObject::set(const char* path, const char* newStr, unsigned nestingLevel
     unsigned keyIndex = getKeyIndex(std::move(key), nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        _jsonPairs.accessJsonNode(keyIndex).reset(JsonStringFactory::create(newStr));
+        _jsonPairs.accessJsonNode(keyIndex) = JsonStringFactory::create(newStr);
         return;
     }
 
