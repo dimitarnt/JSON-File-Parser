@@ -41,9 +41,9 @@ public:
     void createInStartingObject(const char* newKey, const char* newStr);
     void createInObject(const char* path, const char* newKey, const char* newStr);
 
-    void moveBetweenArrays(const char* pathFrom, const char* pathTo);
+    void moveToArray(const char* pathFrom, const char* pathTo);
     void moveToStartingObject(const char* pathFrom);
-    void moveBetweenObjects(const char* pathFrom, const char* pathTo);
+    void moveToObject(const char* pathFrom, const char* pathTo);
 
     void save() const;
     void save(const char* path) const;

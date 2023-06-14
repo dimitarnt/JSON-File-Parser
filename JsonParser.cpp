@@ -220,7 +220,7 @@ void JsonParser::move(const char* pathFrom, const char* pathTo, bool isAddressin
     }
 }
 
-void JsonParser::moveBetweenArrays(const char* pathFrom, const char* pathTo) {
+void JsonParser::moveToArray(const char* pathFrom, const char* pathTo) {
     move(pathFrom, pathTo, false, true);
 }
 
@@ -233,7 +233,7 @@ void JsonParser::moveToStartingObject(const char* pathFrom) {
     throw std::logic_error("Starting Json Node is not a Json Object");
 }
 
-void JsonParser::moveBetweenObjects(const char* pathFrom, const char* pathTo) {
+void JsonParser::moveToObject(const char* pathFrom, const char* pathTo) {
     move(pathFrom, pathTo, false, false);
 }
 
