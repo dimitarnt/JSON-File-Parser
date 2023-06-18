@@ -271,6 +271,8 @@ Pair<String, SharedPtr<JsonNode>> JsonArray::remove(const char* path, unsigned n
 
         throw std::out_of_range("Given path exceeds valid nesting level");
     }
+
+    throw std::runtime_error("No implementation for remove for new JsonNode derived class");
 }
 
 void JsonArray::create(const char* path, bool isAddressingStartingNode, bool createInArray,
