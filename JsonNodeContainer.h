@@ -3,6 +3,7 @@
 #include "SharedPtr.hpp"
 #include "JsonNode.h"
 
+//Heterogeneous container for json nodes
 class JsonNodeContainer {
 private:
     Vector<SharedPtr<JsonNode>> _jsonNodes;

@@ -3,6 +3,7 @@
 #include "Pair.hpp"
 #include "JsonNodeContainer.h"
 
+//Heterogeneous container for pairs comprised of a key and a json node
 class JsonPairContainer {
 private:
     Vector<Pair<String, SharedPtr<JsonNode>>> _jsonPairs;
