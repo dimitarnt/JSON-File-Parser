@@ -14,6 +14,7 @@ namespace {
     const int NUMBER_OF_INDENTATION_SPACES = 2;
 }
 
+//Abstract base class
 class JsonNode {
 private:
     JsonNodeType _type;
@@ -28,7 +29,9 @@ public:
     virtual void print(unsigned nestingLevel, bool isInArray) const = 0;
     virtual void save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const = 0;
 
+    //Get a json value or a json string from a file
     static String parseValue(std::ifstream& in);
+
     static void printIndentation(unsigned nestingLevel);
     static void putIndentationInFile(std::ofstream& out, unsigned nestingLevel);
 
