@@ -250,7 +250,7 @@ Pair<String, SharedPtr<JsonNode>> JsonArray::remove(const char* path, unsigned n
     assertIndex(index, nestingLevel);
 
     if(nestingLevel == lastNestingLevelInPath(path)) {
-        return { String(), _jsonNodeCollection.removeJsonNodeByIndex(index) };
+        return { "", _jsonNodeCollection.removeJsonNodeByIndex(index) };
     }
 
     JsonNodeType nodeType = _jsonNodeCollection[index]->getType();

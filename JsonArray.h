@@ -9,7 +9,7 @@ private:
 
     static void assertNaturalNumberFromStr(const String& index, unsigned nestingLevel);
     void assertIndex(size_t index, unsigned nestingLevel) const;
-    void assertExtendedIndex(size_t index, unsigned nestingLevel) const;
+    void assertExtendedIndex(size_t index, unsigned nestingLevel) const; //The current size is a valid extended-index
 
     static unsigned getIndex(const String& key, unsigned nestingLevel);
     static unsigned getIndex(String&& key, unsigned nestingLevel);
@@ -19,6 +19,7 @@ public:
     explicit JsonArray(std::ifstream& in);
     JsonNode* clone() const override;
 
+    //These functions are used for the search function
     void add(const SharedPtr<JsonNode>& newJsonNode);
     void add(SharedPtr<JsonNode>&& newJsonNode);
     bool isEmpty() const;
@@ -35,5 +36,6 @@ public:
     void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
               const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
 
+    //Function to initiate saving after a certain path is traversed
     void savePath(const char* path, std::ofstream& out, unsigned nestingLevel);
 };
