@@ -24,11 +24,9 @@ public:
 
     void addJsonString(const String& value);
     void addJsonString(String&& value);
-    void addJsonString(const char* value);
 
     void addJsonString(const String& value, size_t index);
     void addJsonString(String&& value, size_t index);
-    void addJsonString(const char* value, size_t index);
 
     SharedPtr<JsonNode> removeJsonNodeByIndex(unsigned index);
 };
