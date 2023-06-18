@@ -9,7 +9,7 @@ private:
     JsonPairContainer _jsonPairs;
 
     static void assertKey(const char* key);
-    void assertNewKey(const char* newKey) const;
+    void assertNewKey(const char* newKey) const; //New key shouldn't be a duplicate of another key in the same object
 
     unsigned getKeyIndex(const String& key, unsigned nestingLevel) const;
     unsigned getKeyIndex(String&& key, unsigned nestingLevel) const;
@@ -31,5 +31,6 @@ public:
     void move(const char* path, bool isAddressingStartingNode, bool moveInArray,
               const char* movedKey, SharedPtr<JsonNode>&& jsonNodeForMoving, unsigned nestingLevel);
 
+    //Function to initiate saving after a certain path is traversed
     void savePath(const char* path, std::ofstream& out, unsigned nestingLevel);
 };
