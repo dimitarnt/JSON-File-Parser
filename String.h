@@ -32,11 +32,11 @@ class String {
 
 public:
     String();
-    explicit String(const char* data);
+    String(const char* data);
     String(const String& other);
-    String(String&& other) noexcept ;
+    String(String&& other) noexcept;
     String& operator=(const String& other);
-    String& operator=(String&& other) noexcept ;
+    String& operator=(String&& other) noexcept;
     ~String();
 
     void setMembers(const char* data);

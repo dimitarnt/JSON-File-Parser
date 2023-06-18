@@ -334,7 +334,7 @@ std::ostream& operator<<(std::ostream& os, const String& str) {
 
 std::istream& operator>>(std::istream& is, String& str) {
     char buffer[BUFFER_SIZE];
-    is >> buffer;
+    is.getline(buffer, BUFFER_SIZE);
 
     str.setMembers(buffer);
 
