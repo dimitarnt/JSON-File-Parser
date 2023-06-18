@@ -3,6 +3,7 @@
 #include "SharedPtr.hpp"
 #include "JsonNode.h"
 
+//Abstract base factory class
 class JsonNodeFactory {
 public:
     virtual ~JsonNodeFactory() = default;
