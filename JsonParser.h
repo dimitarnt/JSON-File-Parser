@@ -2,6 +2,7 @@
 #include "JsonValidator.h"
 #include "JsonNodeContainer.h"
 
+//Singleton parser class
 class JsonParser {
 private:
     JsonNodeContainer _startingNode;
@@ -27,6 +28,10 @@ public:
 
     static JsonParser* getInstance();
     static void freeInstance();
+
+    JsonNodeType getStartingNodeType() const;
+
+    static void validate(const char* fileName);
 
     void openFile(const char* fileName);
     void closeFile();

@@ -36,6 +36,22 @@ void JsonParser::freeInstance() {
     instance = nullptr;
 }
 
+JsonNodeType JsonParser::getStartingNodeType() const {
+    return _startingNodeType;
+}
+
+void JsonParser::validate(const char* fileName) {
+    std::ifstream in(fileName);
+
+    if(!in.is_open()) {
+        throw std::ifstream::failure("Unable to open file");
+    }
+
+    JsonValidator fileValidator(in);
+
+    fileValidator.validate();
+}
+
 void JsonParser::openFile(const char* fileName) {
     if(_fileIsOpened) {
         throw std::runtime_error("Close open file before opening a new one");
@@ -118,6 +134,7 @@ void JsonParser::search(const char* key) const {
 void JsonParser::assertString(const char* str) {
     size_t strLength = strlen(str);
 
+    //There shouldn't be any quotation marks or new line characters in strings
     if(getCharCount(str, strLength, '\"') != 0 || getCharCount(str, strLength, '\n') != 0) {
         throw InvalidJsonSyntax("Disallowed character in given string");
     }
