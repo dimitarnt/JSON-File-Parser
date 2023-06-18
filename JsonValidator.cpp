@@ -331,6 +331,8 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
     return rows;
 }
 
+//Function to find whether a token should follow json object syntax rules
+//A recursive algorithm is implemented to pass through nested objects and nested arrays
 bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                              long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
                                              unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
@@ -398,6 +400,8 @@ bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, 
     return false;
 }
 
+//Function to find whether a token should follow json array syntax rules
+//A recursive algorithm is implemented to pass through nested objects and nested arrays
 bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
                                             unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
@@ -609,6 +613,7 @@ void JsonValidator::validateBracePlacement() const {
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfClosedBrace - 1);
         long long lastPositionOfClosedBracket = getLastPositionOfToken(']', positionOfClosedBrace - 1);
 
+        //To avoid {[}] cases for example
         if(lastPositionOfOpenBracket > lastPositionOfOpenBrace && lastPositionOfOpenBracket > lastPositionOfClosedBrace
             && lastPositionOfOpenBracket > lastPositionOfClosedBracket) {
 
@@ -675,6 +680,7 @@ void JsonValidator::validateBracketPlacement() const {
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfClosedBracket - 1);
         long long lastPositionOfClosedBracket = getLastPositionOfToken(']', positionOfClosedBracket - 1);
 
+        //To avoid [{]} cases for example
         if(lastPositionOfOpenBrace > lastPositionOfOpenBracket && lastPositionOfOpenBrace > lastPositionOfClosedBrace
            && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
 
@@ -688,6 +694,7 @@ void JsonValidator::validateBracketPlacement() const {
 
 void JsonValidator::validateDigitPlacement() const {
 
+    //Validating zeros then ones then twos etc.
     for(unsigned i = 0; i < NUMBER_OF_DIGITS; ++i) {
         unsigned currentDigitCount = getCharCount(_tokens.getData(), _tokenCount, '0' + i);
 
@@ -791,6 +798,7 @@ void JsonValidator::validateMinusPlacement() const {
 
 void JsonValidator::validateValueKeywordPlacement() const {
 
+    //Validating true then false then null keywords
     for(unsigned i = 0; i < NUMBER_OF_JSON_KEYWORDS; ++i) {
         char firstCharacterOfKeyword = 0;
         unsigned currentKeywordCount = 0;
@@ -808,6 +816,8 @@ void JsonValidator::validateValueKeywordPlacement() const {
                 firstCharacterOfKeyword = 'n';
                 currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 'n');
                 break;
+            default:
+                throw std::runtime_error("No implementation for validation of new keyword");
         }
 
         for(unsigned j = 0; j < currentKeywordCount; ++j) {
