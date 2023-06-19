@@ -1,3 +1,3 @@
-# JSON-file-parser
+# JSON File Parser
 
 TO DO
