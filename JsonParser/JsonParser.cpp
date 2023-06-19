@@ -92,6 +92,8 @@ void JsonParser::closeFile() {
         throw std::runtime_error("There is not an open file to close");
     }
 
+    freeInstance();
+
     _fileIsOpened = false;
 }
 
