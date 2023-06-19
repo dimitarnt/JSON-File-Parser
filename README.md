@@ -34,7 +34,7 @@ position in the JSON array with information given by the user.
 in a JSON array. For example "members/1/name" removes the JSON pair with the key "name" or
 "colous/2" removes the third element in the JSON array.
 
-**9) move** - Moves a JSON pair from a JSON object or an element from a JSON array to another
+**9) move** - Move a JSON pair from a JSON object or an element from a JSON array to another
 place in the file.
 
 Moving TO a JSON object is done by giving the path to move from and the path to move to.
@@ -45,15 +45,15 @@ Moving TO a JSON array is done by giving the path to move from and the path to m
 For example "members/1" and "offices/2" moves the element to the third position in the
 JSON array.
 
-**10) save** - Saves the currently loaded file. A path may be given in order to save only the
+**10) save** - Save the currently loaded file. A path may be given in order to save only the
 elements under it. For example not giving a path saves the whole file but giving the path
 "members/1" will only write the elements under the second position in the JSON array
 to the file.
 
-**11) save_as** - Saves the currently loaded file in another file. A path may be given in order
+**11) save_as** - Save the currently loaded file in another file. A path may be given in order
 to save only the elements under it much like the save command.
 
-**12) help** - Provides information as to what commands there are and brief information of what
+**12) help** - Receive information as to what commands there are and brief information of what
 they do.
 
-**13) exit** - Clears up the loaded data and exits the program.
+**13) exit** - Clear up the loaded data and exit the program.
