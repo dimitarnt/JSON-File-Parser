@@ -66,7 +66,7 @@ void JsonParser::openFile(const char* fileName) {
     }
 
     _fileIsOpened = true;
-    
+
     _changesHaveBeenMade = false;
 
     assertJsonFileName(fileName);
