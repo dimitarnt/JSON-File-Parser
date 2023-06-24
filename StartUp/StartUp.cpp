@@ -58,7 +58,7 @@ void StartUp::run() {
 void StartUp::saveChangesPrompt() {
     String answer;
 
-    if(JsonParser::getInstance()->fileIsOpened()) {
+    if(JsonParser::getInstance()->fileIsOpened() && JsonParser::getInstance()->changesHaveBeenMade()) {
         std::cout << "Would you like to save changes?(yes/no)" << std::endl;
         std::cin >> answer;
 
