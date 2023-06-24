@@ -67,6 +67,19 @@ void StartUp::runOpenCommand() {
 }
 
 void StartUp::runCloseCommand() {
+    String answer;
+
+    std::cout << "Would you like to save changes?(yes/no)" << std::endl;
+    std::cin >> answer;
+
+    if(answer == "yes") {
+        JsonParser::getInstance()->save();
+    }
+    else if(answer != "no") {
+        std::cout << "Invalid answer." << std::endl << std::endl;
+        return;
+    }
+
     JsonParser::getInstance()->closeFile();
 
     std::cout << "File closed." << std::endl << std::endl;
@@ -310,15 +323,17 @@ void StartUp::runHelpCommand() {
 void StartUp::runExitCommand() {
     String answer;
 
-    std::cout << "Would you like to save changes?(yes/no)" << std::endl;
-    std::cin >> answer;
+    if(JsonParser::getInstance()->fileIsOpened()) {
+        std::cout << "Would you like to save changes?(yes/no)" << std::endl;
+        std::cin >> answer;
 
-    if(answer == "yes") {
-        JsonParser::getInstance()->save();
-    }
-    else if(answer != "no") {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
+        if(answer == "yes") {
+            JsonParser::getInstance()->save();
+        }
+        else if(answer != "no") {
+            std::cout << "Invalid answer." << std::endl << std::endl;
+            return;
+        }
     }
 
     JsonParser::freeInstance();
