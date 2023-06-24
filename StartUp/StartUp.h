@@ -2,6 +2,7 @@
 
 class StartUp {
 private:
+    static void saveChangesPrompt();
     static void runOpenCommand();
     static void runCloseCommand();
     static void runValidateCommand();

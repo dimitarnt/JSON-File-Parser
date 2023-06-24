@@ -55,13 +55,43 @@ void StartUp::run() {
     }
 }
 
+void StartUp::saveChangesPrompt() {
+    String answer;
+
+    if(JsonParser::getInstance()->fileIsOpened()) {
+        std::cout << "Would you like to save changes?(yes/no)" << std::endl;
+        std::cin >> answer;
+
+        if(answer == "yes") {
+
+            try {
+                JsonParser::getInstance()->save();
+            }
+            catch(const std::exception& exception) {
+                std::cout << exception.what() << std::endl << std::endl;
+                return;
+            }
+        }
+        else if(answer != "no") {
+            std::cout << "Invalid answer." << std::endl << std::endl;
+            return;
+        }
+    }
+}
+
 void StartUp::runOpenCommand() {
     String fileName;
 
     std::cout << "Enter file name:";
     std::cin >> fileName;
 
-    JsonParser::getInstance()->openFile(fileName.getData());
+    try {
+        JsonParser::getInstance()->openFile(fileName.getData());
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << "File opened." << std::endl << std::endl;
 }
@@ -69,18 +99,15 @@ void StartUp::runOpenCommand() {
 void StartUp::runCloseCommand() {
     String answer;
 
-    std::cout << "Would you like to save changes?(yes/no)" << std::endl;
-    std::cin >> answer;
+    saveChangesPrompt();
 
-    if(answer == "yes") {
-        JsonParser::getInstance()->save();
+    try {
+        JsonParser::getInstance()->closeFile();
     }
-    else if(answer != "no") {
-        std::cout << "Invalid answer." << std::endl << std::endl;
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
         return;
     }
-
-    JsonParser::getInstance()->closeFile();
 
     std::cout << "File closed." << std::endl << std::endl;
 }
@@ -91,13 +118,26 @@ void StartUp::runValidateCommand() {
     std::cout << "Enter file name:";
     std::cin >> fileName;
 
-    JsonParser::validate(fileName.getData());
+    try {
+        JsonParser::validate(fileName.getData());
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << "File successfully validated." << std::endl << std::endl;
 }
 
 void StartUp::runPrintCommand() {
-    JsonParser::getInstance()->print();
+
+    try {
+        JsonParser::getInstance()->print();
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << std::endl;
 }
@@ -108,7 +148,13 @@ void StartUp::runSearchCommand() {
     std::cout << "Enter search term:";
     std::cin >> searchTerm;
 
-    JsonParser::getInstance()->search(searchTerm.getData());
+    try {
+        JsonParser::getInstance()->search(searchTerm.getData());
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << std::endl;
 }
@@ -123,7 +169,13 @@ void StartUp::runSetCommand() {
     std::cout << "Enter new string:";
     std::cin >> newStr;
 
-    JsonParser::getInstance()->set(path.getData(), newStr.getData());
+    try {
+        JsonParser::getInstance()->set(path.getData(), newStr.getData());
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << "New value set." << std::endl << std::endl;
 }
@@ -164,8 +216,24 @@ void StartUp::runCreateCommand() {
         std::cout << "Enter new string:";
         std::cin >> newStr;
 
-        userIsAddressingStartingObject ? JsonParser::getInstance()->createInStartingObject(newKey.getData(), newStr.getData()) :
-        JsonParser::getInstance()->createInObject(path.getData(), newKey.getData(), newStr.getData());
+        if(userIsAddressingStartingObject) {
+            try{
+                JsonParser::getInstance()->createInStartingObject(newKey.getData(), newStr.getData());
+            }
+            catch(const std::exception& exception) {
+                std::cout << exception.what() << std::endl << std::endl;
+                return;
+            }
+        }
+        else {
+            try{
+                JsonParser::getInstance()->createInObject(path.getData(), newKey.getData(), newStr.getData());
+            }
+            catch(const std::exception& exception) {
+                std::cout << exception.what() << std::endl << std::endl;
+                return;
+            }
+        }
 
         std::cout << "New pair created." << std::endl << std::endl;
     }
@@ -176,7 +244,13 @@ void StartUp::runCreateCommand() {
         std::cout << "Enter new string:";
         std::cin >> newStr;
 
-        JsonParser::getInstance()->createInArray(path.getData(), newStr.getData());
+        try {
+            JsonParser::getInstance()->createInArray(path.getData(), newStr.getData());
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
 
         std::cout << "New value created." << std::endl << std::endl;
     }
@@ -192,7 +266,13 @@ void StartUp::runRemoveCommand() {
     std::cout << "Enter path:";
     std::cin >> path;
 
-    JsonParser::getInstance()->remove(path.getData());
+    try {
+        JsonParser::getInstance()->remove(path.getData());
+    }
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 
     std::cout << "Element removed." << std::endl << std::endl;
 }
@@ -229,8 +309,24 @@ void StartUp::runMoveCommand() {
             std::cin >> pathTo;
         }
 
-        userIsAddressingStartingObject ? JsonParser::getInstance()->moveToStartingObject(pathFrom.getData()) :
-        JsonParser::getInstance()->moveToObject(pathFrom.getData(), pathTo.getData());
+        if(userIsAddressingStartingObject) {
+            try {
+                JsonParser::getInstance()->moveToStartingObject(pathFrom.getData());
+            }
+            catch(const std::exception& exception) {
+                std::cout << exception.what() << std::endl << std::endl;
+                return;
+            }
+        }
+        else {
+            try {
+                JsonParser::getInstance()->moveToObject(pathFrom.getData(), pathTo.getData());
+            }
+            catch(const std::exception& exception) {
+                std::cout << exception.what() << std::endl << std::endl;
+                return;
+            }
+        }
 
         std::cout << "Elements moved." << std::endl << std::endl;
     }
@@ -238,7 +334,13 @@ void StartUp::runMoveCommand() {
         std::cout << "Enter path to move to:";
         std::cin >> pathTo;
 
-        JsonParser::getInstance()->moveToArray(pathFrom.getData(), pathTo.getData());
+        try {
+            JsonParser::getInstance()->moveToArray(pathFrom.getData(), pathTo.getData());
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
 
         std::cout << "Elements moved." << std::endl << std::endl;
     }
@@ -260,10 +362,23 @@ void StartUp::runSaveCommand() {
         std::cout << "Enter path:";
         std::cin >> path;
 
-        JsonParser::getInstance()->save(path.getData());
+        try {
+            JsonParser::getInstance()->save(path.getData());
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
     }
     else if(answer == "no") {
-        JsonParser::getInstance()->save();
+
+        try {
+            JsonParser::getInstance()->save();
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
     }
     else {
         std::cout << "Invalid answer." << std::endl << std::endl;
@@ -289,10 +404,23 @@ void StartUp::runSaveAsCommand() {
         std::cout << "Enter path:";
         std::cin >> path;
 
-        JsonParser::getInstance()->saveAs(fileName.getData(), path.getData());
+        try {
+            JsonParser::getInstance()->saveAs(fileName.getData(), path.getData());
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
     }
     else if(answer == "no") {
-        JsonParser::getInstance()->saveAs(fileName.getData());
+
+        try {
+            JsonParser::getInstance()->saveAs(fileName.getData());
+        }
+        catch(const std::exception& exception) {
+            std::cout << exception.what() << std::endl << std::endl;
+            return;
+        }
     }
     else {
         std::cout << "Invalid answer." << std::endl << std::endl;
@@ -323,18 +451,13 @@ void StartUp::runHelpCommand() {
 void StartUp::runExitCommand() {
     String answer;
 
-    if(JsonParser::getInstance()->fileIsOpened()) {
-        std::cout << "Would you like to save changes?(yes/no)" << std::endl;
-        std::cin >> answer;
+    saveChangesPrompt();
 
-        if(answer == "yes") {
-            JsonParser::getInstance()->save();
-        }
-        else if(answer != "no") {
-            std::cout << "Invalid answer." << std::endl << std::endl;
-            return;
-        }
+    try {
+        JsonParser::freeInstance();
     }
-
-    JsonParser::freeInstance();
+    catch(const std::exception& exception) {
+        std::cout << exception.what() << std::endl << std::endl;
+        return;
+    }
 }
