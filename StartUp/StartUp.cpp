@@ -1,5 +1,18 @@
 #include "StartUp.h"
-#include "JsonParser.h"
+#include "String.h"
+#include "OpenCommand.h"
+#include "CloseCommand.h"
+#include "ValidateCommand.h"
+#include "PrintCommand.h"
+#include "SearchCommand.h"
+#include "SetCommand.h"
+#include "CreateCommand.h"
+#include "RemoveCommand.h"
+#include "MoveCommand.h"
+#include "SaveCommand.h"
+#include "SaveAsCommand.h"
+#include "HelpCommand.h"
+#include "ExitCommand.h"
 
 void StartUp::run() {
     String command;
@@ -10,454 +23,60 @@ void StartUp::run() {
         std::cin >> command;
 
         if(command == "open") {
-            runOpenCommand();
+            OpenCommand openCommand;
+            openCommand.execute();
         }
         else if(command == "close") {
-            runCloseCommand();
+            CloseCommand closeCommand;
+            closeCommand.execute();
         }
         else if(command == "validate") {
-            runValidateCommand();
+            ValidateCommand validateCommand;
+            validateCommand.execute();
         }
         else if(command == "print") {
-            runPrintCommand();
+            PrintCommand printCommand;
+            printCommand.execute();
         }
         else if(command == "search") {
-            runSearchCommand();
+            SearchCommand searchCommand;
+            searchCommand.execute();
         }
         else if(command == "set") {
-            runSetCommand();
+            SetCommand setCommand;
+            setCommand.execute();
         }
         else if(command == "create") {
-            runCreateCommand();
+            CreateCommand createCommand;
+            createCommand.execute();
         }
         else if(command == "remove") {
-            runRemoveCommand();
+            RemoveCommand removeCommand;
+            removeCommand.execute();
         }
         else if(command == "move") {
-            runMoveCommand();
+            MoveCommand moveCommand;
+            moveCommand.execute();
         }
         else if(command == "save") {
-            runSaveCommand();
+            SaveCommand saveCommand;
+            saveCommand.execute();
         }
         else if(command == "save_as") {
-            runSaveAsCommand();
+            SaveAsCommand saveAsCommand;
+            saveAsCommand.execute();
         }
         else if(command == "help") {
-            runHelpCommand();
+            HelpCommand helpCommand;
+            helpCommand.execute();
         }
         else if(command == "exit") {
-            runExitCommand();
+            ExitCommand exitCommand;
+            exitCommand.execute();
             return;
         }
         else {
             std::cout << "Unknown command." << std::endl << std::endl;
         }
-    }
-}
-
-void StartUp::saveChangesPrompt() {
-    String answer;
-
-    if(JsonParser::getInstance()->fileIsOpened() && JsonParser::getInstance()->changesHaveBeenMade()) {
-        std::cout << "Would you like to save changes?(yes/no)" << std::endl;
-        std::cin >> answer;
-
-        if(answer == "yes") {
-
-            try {
-                JsonParser::getInstance()->save();
-            }
-            catch(const std::exception& exception) {
-                std::cout << exception.what() << std::endl << std::endl;
-                return;
-            }
-        }
-        else if(answer != "no") {
-            std::cout << "Invalid answer." << std::endl << std::endl;
-            return;
-        }
-    }
-}
-
-void StartUp::runOpenCommand() {
-    String fileName;
-
-    std::cout << "Enter file name:";
-    std::cin >> fileName;
-
-    try {
-        JsonParser::getInstance()->openFile(fileName.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "File opened." << std::endl << std::endl;
-}
-
-void StartUp::runCloseCommand() {
-    String answer;
-
-    saveChangesPrompt();
-
-    try {
-        JsonParser::getInstance()->closeFile();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "File closed." << std::endl << std::endl;
-}
-
-void StartUp::runValidateCommand() {
-    String fileName;
-
-    std::cout << "Enter file name:";
-    std::cin >> fileName;
-
-    try {
-        JsonParser::validate(fileName.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "File successfully validated." << std::endl << std::endl;
-}
-
-void StartUp::runPrintCommand() {
-
-    try {
-        JsonParser::getInstance()->print();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << std::endl;
-}
-
-void StartUp::runSearchCommand() {
-    String searchTerm;
-
-    std::cout << "Enter search term:";
-    std::cin >> searchTerm;
-
-    try {
-        JsonParser::getInstance()->search(searchTerm.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << std::endl;
-}
-
-void StartUp::runSetCommand() {
-    String path;
-    String newStr;
-
-    std::cout << "Enter set path:";
-    std::cin >> path;
-
-    std::cout << "Enter new string:";
-    std::cin >> newStr;
-
-    try {
-        JsonParser::getInstance()->set(path.getData(), newStr.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "New value set." << std::endl << std::endl;
-}
-
-void StartUp::runCreateCommand() {
-    String path;
-    String newStr;
-    String answer;
-
-    std::cout << "Would you like to create in an object or an array?(object/array)" << std::endl;
-    std::cin >> answer;
-
-    if(answer == "object") {
-        String newKey;
-        bool userIsAddressingStartingObject = false;
-
-        if(JsonParser::getInstance()->getStartingNodeType() == JsonNodeType::JSON_OBJECT) {
-            std::cout << "Would you like to create in the starting object?(yes/no)" << std::endl;
-            std::cin >> answer;
-
-            if(answer == "yes") {
-                userIsAddressingStartingObject = true;
-            }
-            else if(answer != "no") {
-                std::cout << "Invalid answer." << std::endl << std::endl;
-                return;
-            }
-        }
-
-        if(!userIsAddressingStartingObject) {
-            std::cout << "Enter path:";
-            std::cin >> path;
-        }
-
-        std::cout << "Enter new key:";
-        std::cin >> newKey;
-
-        std::cout << "Enter new string:";
-        std::cin >> newStr;
-
-        if(userIsAddressingStartingObject) {
-            try{
-                JsonParser::getInstance()->createInStartingObject(newKey.getData(), newStr.getData());
-            }
-            catch(const std::exception& exception) {
-                std::cout << exception.what() << std::endl << std::endl;
-                return;
-            }
-        }
-        else {
-            try{
-                JsonParser::getInstance()->createInObject(path.getData(), newKey.getData(), newStr.getData());
-            }
-            catch(const std::exception& exception) {
-                std::cout << exception.what() << std::endl << std::endl;
-                return;
-            }
-        }
-
-        std::cout << "New pair created." << std::endl << std::endl;
-    }
-    else if(answer == "array") {
-        std::cout << "Enter path:";
-        std::cin >> path;
-
-        std::cout << "Enter new string:";
-        std::cin >> newStr;
-
-        try {
-            JsonParser::getInstance()->createInArray(path.getData(), newStr.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-
-        std::cout << "New value created." << std::endl << std::endl;
-    }
-    else {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
-    }
-}
-
-void StartUp::runRemoveCommand() {
-    String path;
-
-    std::cout << "Enter path:";
-    std::cin >> path;
-
-    try {
-        JsonParser::getInstance()->remove(path.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "Element removed." << std::endl << std::endl;
-}
-
-void StartUp::runMoveCommand() {
-    String pathFrom;
-    String pathTo;
-    String answer;
-
-    std::cout << "Would you like to move in an object or an array?(object/array)" << std::endl;
-    std::cin >> answer;
-
-    std::cout << "Enter path to move from:";
-    std::cin >> pathFrom;
-
-    if(answer == "object") {
-        bool userIsAddressingStartingObject = false;
-
-        if(JsonParser::getInstance()->getStartingNodeType() == JsonNodeType::JSON_OBJECT) {
-            std::cout << "Would you like to move to the starting object?(yes/no)" << std::endl;
-            std::cin >> answer;
-
-            if(answer == "yes") {
-                userIsAddressingStartingObject = true;
-            }
-            else if(answer != "no") {
-                std::cout << "Invalid answer." << std::endl << std::endl;
-                return;
-            }
-        }
-
-        if(!userIsAddressingStartingObject) {
-            std::cout << "Enter path to move to:";
-            std::cin >> pathTo;
-        }
-
-        if(userIsAddressingStartingObject) {
-            try {
-                JsonParser::getInstance()->moveToStartingObject(pathFrom.getData());
-            }
-            catch(const std::exception& exception) {
-                std::cout << exception.what() << std::endl << std::endl;
-                return;
-            }
-        }
-        else {
-            try {
-                JsonParser::getInstance()->moveToObject(pathFrom.getData(), pathTo.getData());
-            }
-            catch(const std::exception& exception) {
-                std::cout << exception.what() << std::endl << std::endl;
-                return;
-            }
-        }
-
-        std::cout << "Elements moved." << std::endl << std::endl;
-    }
-    else if(answer == "array") {
-        std::cout << "Enter path to move to:";
-        std::cin >> pathTo;
-
-        try {
-            JsonParser::getInstance()->moveToArray(pathFrom.getData(), pathTo.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-
-        std::cout << "Elements moved." << std::endl << std::endl;
-    }
-    else {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
-    }
-}
-
-void StartUp::runSaveCommand() {
-    String answer;
-
-    std::cout << "Would you like to save only a specific path?(yes/no)" << std::endl;
-    std::cin >> answer;
-
-    if(answer == "yes") {
-        String path;
-
-        std::cout << "Enter path:";
-        std::cin >> path;
-
-        try {
-            JsonParser::getInstance()->save(path.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else if(answer == "no") {
-
-        try {
-            JsonParser::getInstance()->save();
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "File saved." << std::endl << std::endl;
-}
-
-void StartUp::runSaveAsCommand() {
-    String fileName;
-    String answer;
-
-    std::cout << "Enter file name to save to:";
-    std::cin >> fileName;
-
-    std::cout << "Would you like to save only a specific path?(yes/no)" << std::endl;
-    std::cin >> answer;
-
-    if(answer == "yes") {
-        String path;
-
-        std::cout << "Enter path:";
-        std::cin >> path;
-
-        try {
-            JsonParser::getInstance()->saveAs(fileName.getData(), path.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else if(answer == "no") {
-
-        try {
-            JsonParser::getInstance()->saveAs(fileName.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "File saved." << std::endl << std::endl;
-}
-
-void StartUp::runHelpCommand() {
-    std::cout << "List of available commands:" << std::endl;
-
-    std::cout << "1)open (Open json file)" << std::endl;
-    std::cout << "2)close (Close json file)" << std::endl;
-    std::cout << "3)validate (Validate json file)" << std::endl;
-    std::cout << "4)print (Print opened json file)" << std::endl;
-    std::cout << "5)search (Search in the opened json file by key)" << std::endl;
-    std::cout << "6)set (Set new string value by path)" << std::endl;
-    std::cout << "7)create (Create new json pair or an element in an array)" << std::endl;
-    std::cout << "8)remove (Remove a json pair or an element in an array)" << std::endl;
-    std::cout << "9)move (Move a json pair or an element in an array)" << std::endl;
-    std::cout << "10)save (Save the whole current file or just a given path)" << std::endl;
-    std::cout << "10)save_as (Save the whole current file or just a given path in a different file)" << std::endl;
-
-    std::cout << std::endl;
-}
-
-void StartUp::runExitCommand() {
-    String answer;
-
-    saveChangesPrompt();
-
-    try {
-        JsonParser::freeInstance();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
     }
 }
