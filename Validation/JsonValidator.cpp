@@ -913,7 +913,6 @@ void JsonValidator::validateCommaPlacement() const {
         if(tokenIsInJsonObjectScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
 
             if(!validTokensPrecedingCommaInJsonObject(previousToken, tokenThreePositionsBack)) {
-                std::cout << lastPositionOfOpenBrace << '/' << lastPositionOfClosedBrace << '/' << lastPositionOfOpenBracket << '/' << lastPositionOfClosedBracket;
                 String message("Out of place comma at row ");
                 message += getRowPositionOfToken(positionOfComma);
 
