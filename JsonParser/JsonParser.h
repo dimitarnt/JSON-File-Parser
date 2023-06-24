@@ -9,6 +9,7 @@ private:
     String _fileName;
     JsonNodeType _startingNodeType = JsonNodeType::JSON_OBJECT;
     bool _fileIsOpened = false;
+    bool _changesHaveBeenMade = false;
 
     static JsonParser* instance;
 
@@ -18,7 +19,7 @@ private:
 
     void create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr);
     void move(const char* pathFrom, const char* pathTo, bool isAddressingStartingNode, bool moveInArray);
-    void save(const char* path, bool isAddressingStartingNode, const char* fileName) const;
+    void save(const char* path, bool isAddressingStartingNode, const char* fileName);
 
     JsonParser() = default;
 
@@ -31,6 +32,7 @@ public:
 
     JsonNodeType getStartingNodeType() const;
     bool fileIsOpened() const;
+    bool changesHaveBeenMade() const;
 
     static void validate(const char* fileName);
 
@@ -51,8 +53,8 @@ public:
     void moveToStartingObject(const char* pathFrom);
     void moveToObject(const char* pathFrom, const char* pathTo);
 
-    void save() const;
-    void save(const char* path) const;
-    void saveAs(const char* fileName) const;
-    void saveAs(const char* fileName, const char* path) const;
+    void save();
+    void save(const char* path);
+    void saveAs(const char* fileName);
+    void saveAs(const char* fileName, const char* path);
 };
