@@ -40,6 +40,10 @@ JsonNodeType JsonParser::getStartingNodeType() const {
     return _startingNodeType;
 }
 
+bool JsonParser::fileIsOpened() const {
+    return _fileIsOpened;
+}
+
 void JsonParser::validate(const char* fileName) {
     std::ifstream in(fileName);
 

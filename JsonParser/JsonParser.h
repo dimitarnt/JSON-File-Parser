@@ -30,6 +30,7 @@ public:
     static void freeInstance();
 
     JsonNodeType getStartingNodeType() const;
+    bool fileIsOpened() const;
 
     static void validate(const char* fileName);
 
