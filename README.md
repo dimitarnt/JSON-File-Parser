@@ -163,13 +163,13 @@ JSON array under the key "past jobs" to the starting JSON object. The resulting 
 ("Unknown": cashier)*
 
 **31) save <path>** - Save the currently loaded JSON file. A path may be given in order to save only the
-elements under it.
+elements under it. The traversal path is STILL USED (refer to the traverse command).
 
 *For example not giving a path saves the whole file but giving the path **person** 
 will only write the contents under the key "person" to the file.*
 
 **32) save_as <path>** - Save the currently loaded file in another file. A path may be given in order
-to save only the elements under it.
+to save only the elements under it. The traversal path is STILL USED (refer to the traverse command).
 
 **12) help** - Display information about the terminology of the JSON file structure and about the available
 commands that the JSON parser supports.
