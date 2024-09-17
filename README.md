@@ -24,22 +24,22 @@ the corresponding depths of the JSON file point to a specific part of the JSON f
 ***Example JSON file***
 
 {<br/>
-&nbsp;&nbsp;"person": {<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"name": "John",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"age": 25,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"past jobs": [<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"accountant",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"cashier",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"zookeeper"<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"is homeowner": true<br/>
-&nbsp;&nbsp;},<br/>
-&nbsp;&nbsp;"random": null,<br/>
-&nbsp;&nbsp;"colors": [<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;red,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;green,<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;blue<br/>
-&nbsp;&nbsp;]<br/>
+&nbsp;&nbsp;&nbsp;"person": {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "John",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"age": 25,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"past jobs": [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"accountant",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"cashier",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"zookeeper"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"is homeowner": true<br/>
+&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;"random": null,<br/>
+&nbsp;&nbsp;&nbsp;"colors": [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;red,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;green,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blue<br/>
+&nbsp;&nbsp;&nbsp;]<br/>
 }<br/>
 
 ***The program provides the following commands:***
