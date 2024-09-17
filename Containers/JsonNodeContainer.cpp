@@ -1,14 +1,11 @@
 #include "JsonNodeContainer.h"
-#include "JsonObjectFactory.h"
-#include "JsonArrayFactory.h"
-#include "JsonValueFactory.h"
-#include "JsonStringFactory.h"
+#include "JsonNodeFactory.h"
 
 unsigned JsonNodeContainer::getSize() const {
     return _jsonNodes.getSize();
 }
 
-SharedPtr<JsonNode> JsonNodeContainer::operator[](unsigned index) const {
+const SharedPtr<JsonNode>& JsonNodeContainer::operator[](unsigned index) const {
     return _jsonNodes[index];
 }
 
@@ -29,29 +26,7 @@ void JsonNodeContainer::addJsonNode(SharedPtr<JsonNode>&& newJsonNode) {
 }
 
 void JsonNodeContainer::addJsonNode(JsonNodeType type, std::ifstream& in, size_t index) {
-    JsonObjectFactory objectFactory;
-    JsonArrayFactory arrayFactory;
-    JsonValueFactory valueFactory;
-    JsonStringFactory stringFactory;
-
-    switch(type) {
-
-        case JsonNodeType::JSON_OBJECT:
-            _jsonNodes.pushAt(objectFactory.create(in), index);
-            break;
-
-        case JsonNodeType::JSON_ARRAY:
-            _jsonNodes.pushAt(arrayFactory.create(in), index);
-            break;
-
-        case JsonNodeType::JSON_VALUE:
-            _jsonNodes.pushAt(valueFactory.create(in), index);
-            break;
-
-        case JsonNodeType::JSON_STRING:
-            _jsonNodes.pushAt(stringFactory.create(in), index);
-            break;
-    }
+    _jsonNodes.pushAt(JsonNodeFactory::create(in, type), index);
 }
 
 void JsonNodeContainer::addJsonNode(const SharedPtr<JsonNode>& newJsonNode, size_t index) {
@@ -62,20 +37,68 @@ void JsonNodeContainer::addJsonNode(SharedPtr<JsonNode>&& newJsonNode, size_t in
     _jsonNodes.pushAt(newJsonNode, index);
 }
 
-void JsonNodeContainer::addJsonString(const String& value) {
-    addJsonString(value, getSize());
+void JsonNodeContainer::addEmptyJsonObject() {
+    addEmptyJsonObject(getSize());
 }
 
-void JsonNodeContainer::addJsonString(String&& value) {
-    addJsonString(std::move(value), getSize());
+void JsonNodeContainer::addEmptyJsonArray() {
+    addEmptyJsonArray(getSize());
 }
 
-void JsonNodeContainer::addJsonString(const String& value, size_t index) {
-    _jsonNodes.pushAt(JsonStringFactory::create(value), index);
+void JsonNodeContainer::addEmptyJsonObject(size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createEmptyJsonObject(), index);
 }
 
-void JsonNodeContainer::addJsonString(String&& value, size_t index) {
-    _jsonNodes.pushAt(JsonStringFactory::create(std::move(value)), index);
+void JsonNodeContainer::addEmptyJsonArray(size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createEmptyJsonArray(), index);
+}
+
+void JsonNodeContainer::addJsonString(const String& str) {
+    addJsonString(str, getSize());
+}
+
+void JsonNodeContainer::addJsonString(String&& str) {
+    addJsonString(std::move(str), getSize());
+}
+
+void JsonNodeContainer::addJsonString(const String& str, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonString(str), index);
+}
+
+void JsonNodeContainer::addJsonString(String&& str, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonString(std::move(str)), index);
+}
+
+void JsonNodeContainer::addJsonKeyword(const String& keyword) {
+    addJsonKeyword(keyword, getSize());
+}
+
+void JsonNodeContainer::addJsonKeyword(String&& keyword) {
+    addJsonKeyword(std::move(keyword), getSize());
+}
+
+void JsonNodeContainer::addJsonKeyword(const String& keyword, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonKeyword(keyword), index);
+}
+
+void JsonNodeContainer::addJsonKeyword(String&& keyword, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonKeyword(std::move(keyword)), index);
+}
+
+void JsonNodeContainer::addJsonNumber(const String& number) {
+    addJsonNumber(number, getSize());
+}
+
+void JsonNodeContainer::addJsonNumber(String&& number) {
+    addJsonNumber(std::move(number), getSize());
+}
+
+void JsonNodeContainer::addJsonNumber(const String& number, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonNumber(number), index);
+}
+
+void JsonNodeContainer::addJsonNumber(String&& number, size_t index) {
+    _jsonNodes.pushAt(JsonNodeFactory::createJsonNumber(std::move(number)), index);
 }
 
 SharedPtr<JsonNode> JsonNodeContainer::removeJsonNodeByIndex(unsigned index) {

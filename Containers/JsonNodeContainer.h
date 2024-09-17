@@ -12,7 +12,7 @@ public:
     JsonNodeContainer() = default;
 
     unsigned getSize() const;
-    SharedPtr<JsonNode> operator[](unsigned index) const;
+    const SharedPtr<JsonNode>& operator[](unsigned index) const;
     SharedPtr<JsonNode>& operator[](unsigned index);
 
     void addJsonNode(JsonNodeType type, std::ifstream& in);
@@ -23,11 +23,29 @@ public:
     void addJsonNode(const SharedPtr<JsonNode>& newJsonNode, size_t index);
     void addJsonNode(SharedPtr<JsonNode>&& newJsonNode, size_t index);
 
-    void addJsonString(const String& value);
-    void addJsonString(String&& value);
+    void addEmptyJsonObject();
+    void addEmptyJsonArray();
 
-    void addJsonString(const String& value, size_t index);
-    void addJsonString(String&& value, size_t index);
+    void addEmptyJsonObject(size_t index);
+    void addEmptyJsonArray(size_t index);
+
+    void addJsonString(const String& str);
+    void addJsonString(String&& str);
+
+    void addJsonString(const String& str, size_t index);
+    void addJsonString(String&& str, size_t index);
+
+    void addJsonKeyword(const String& keyword);
+    void addJsonKeyword(String&& keyword);
+
+    void addJsonKeyword(const String& keyword, size_t index);
+    void addJsonKeyword(String&& keyword, size_t index);
+
+    void addJsonNumber(const String& number);
+    void addJsonNumber(String&& number);
+
+    void addJsonNumber(const String& number, size_t index);
+    void addJsonNumber(String&& number, size_t index);
 
     SharedPtr<JsonNode> removeJsonNodeByIndex(unsigned index);
 };
