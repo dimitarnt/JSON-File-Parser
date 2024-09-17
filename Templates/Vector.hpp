@@ -99,6 +99,7 @@ Vector<T>::~Vector() {
 template <typename T>
 void Vector<T>::assertIndex(size_t index) const {
     if (index >= size) {
+        std::cout << index;
         throw std::out_of_range("Error, index is out of range");
     }
 }

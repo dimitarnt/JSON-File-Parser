@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 //source - https://github.com/GeorgiTerziev02/Object-oriented_programming_FMI/tree/main/Sem.%2013/Solutions/SharedPointer
 
