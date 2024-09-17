@@ -3,6 +3,7 @@
 #include "JsonObject.h"
 #include "InvalidJsonSyntax.h"
 #include "constants.h"
+#include "fileFunctions.h"
 #include <cstring>
 
 JsonParser* JsonParser::instance = nullptr;
@@ -17,9 +18,24 @@ void JsonParser::assertJsonFileName(const char* fileName) {
     }
 }
 
+void JsonParser::assertKey(const char* key) {
+
+    if(strcmp(key, "") == 0) {
+        throw std::invalid_argument("Key cannot be an empty string");
+    }
+}
+
 void JsonParser::assertOpenFile() const {
+
     if(!_fileIsOpened) {
-        throw std::runtime_error("There is no open file");
+        throw std::logic_error("There is no open file");
+    }
+}
+
+void JsonParser::assertNonInitiatedMove() const {
+
+    if(!_moveFromPath.isEmpty()) {
+        throw std::logic_error("Selected element for moving should be moved first");
     }
 }
 
@@ -36,16 +52,16 @@ void JsonParser::freeInstance() {
     instance = nullptr;
 }
 
-JsonNodeType JsonParser::getStartingNodeType() const {
-    return _startingNodeType;
-}
-
 bool JsonParser::fileIsOpened() const {
     return _fileIsOpened;
 }
 
 bool JsonParser::changesHaveBeenMade() const {
     return _changesHaveBeenMade;
+}
+
+bool JsonParser::actionIsBeingUndone() const {
+    return _actionIsBeingUndone;
 }
 
 void JsonParser::validate(const char* fileName) {
@@ -65,10 +81,6 @@ void JsonParser::openFile(const char* fileName) {
         throw std::runtime_error("Close open file before opening a new one");
     }
 
-    _fileIsOpened = true;
-
-    _changesHaveBeenMade = false;
-
     assertJsonFileName(fileName);
     _fileName = String(fileName);
 
@@ -78,23 +90,32 @@ void JsonParser::openFile(const char* fileName) {
         throw std::ifstream::failure("Unable to open file");
     }
 
+    if(getFileSize(in) == 0) {
+        _startingNode.addEmptyJsonObject();
+        _startingNodeType = JsonNodeType::JSON_OBJECT;
+
+        _fileIsOpened = true;
+        _changesHaveBeenMade = false;
+        return;
+    }
+
     JsonValidator fileValidator(in);
 
     fileValidator.validate();
 
-    char firstChar = (char)in.get();
+    char firstChar = (char)in.peek();
 
     if(firstChar == '{') {
         _startingNode.addJsonNode(JsonNodeType::JSON_OBJECT, in);
         _startingNodeType = JsonNodeType::JSON_OBJECT;
-        return;
     }
-
-    if(firstChar == '[') {
+    else if(firstChar == '[') {
         _startingNode.addJsonNode(JsonNodeType::JSON_ARRAY, in);
         _startingNodeType = JsonNodeType::JSON_ARRAY;
-        return;
     }
+
+    _fileIsOpened = true;
+    _changesHaveBeenMade = false;
 }
 
 void JsonParser::closeFile() {
@@ -110,26 +131,33 @@ void JsonParser::closeFile() {
 void JsonParser::print() const {
     assertOpenFile();
 
-    _startingNode[0]->print(0, false);
-    std::cout << std::endl;
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->printPath(_traversedPath.getData(), 0);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->printPath(_traversedPath.getData(), 0);
+    }
 }
 
 void JsonParser::search(const char* key) const {
     assertOpenFile();
+    assertKey(key);
 
     JsonArray searchResults;
-    String keyStr(key);
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        jsonObjectPtr->search(searchResults, keyStr);
+        jsonObjectPtr->search(searchResults, key);
     }
-
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
         auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        jsonArrayPtr->search(searchResults, keyStr);
+        jsonArrayPtr->search(searchResults, key);
     }
 
     if(searchResults.isEmpty()) {
@@ -139,142 +167,837 @@ void JsonParser::search(const char* key) const {
         return;
     }
 
-    searchResults.print(0, false);
-    std::cout << std::endl;
+    searchResults.print(0);
 }
 
-void JsonParser::assertString(const char* str) {
-    size_t strLength = strlen(str);
+String JsonParser::getConcatenatedTraversalPath(const char* path) const {
+    if(_actionIsBeingUndone) {
+        return path;
+    }
 
-    //There shouldn't be any quotation marks or new line characters in strings
-    if(getCharCount(str, strLength, '\"') != 0 || getCharCount(str, strLength, '\n') != 0) {
-        throw InvalidJsonSyntax("Disallowed character in given string");
+    if(path[0] == '\0') {
+        return _traversedPath;
+    }
+
+    if(_traversedPath.isEmpty()) {
+        return path;
+    }
+
+    String result = _traversedPath + '/';
+    result += path;
+
+    return result;
+}
+
+void JsonParser::traverse(const char* path) {
+    assertOpenFile();
+    String oldTraversedPath = _traversedPath;
+
+    if(_traversedPath.isEmpty()) {
+        _traversedPath += path;
+    }
+    else {
+        _traversedPath += '/';
+        _traversedPath += path;
+    }
+
+    try {
+        print();
+    }
+    catch(const std::exception& exception) {
+        _traversedPath = oldTraversedPath;
+        throw;
     }
 }
 
-void JsonParser::set(const char* path, const char* newStr) {
+String JsonParser::getPreviousPath(const char* path) {
+    String pathStr(path);
+    size_t pathLength = pathStr.getLength();
+
+    for(size_t i = 0; i < pathLength; ++i) {
+
+        if(pathStr[pathLength - i - 1] == '/') {
+            return pathStr.substring(0, pathLength - i - 1);
+        }
+    }
+
+    return "";
+}
+
+String JsonParser::getBaseKey(const char* path) {
+    String pathStr(path);
+    size_t pathLength = pathStr.getLength();
+
+    size_t startIndex = 0;
+
+    for(size_t i = 0; i < pathLength; ++i) {
+
+        if(pathStr[pathLength - i - 1] == '/') {
+            startIndex = pathLength - i - 1;
+        }
+    }
+
+    return pathStr.substring(startIndex, pathLength - startIndex);
+}
+
+String JsonParser::addToPath(const char* path, const String& newKey) {
+    String pathStr(path);
+
+    pathStr += '/';
+    pathStr += newKey;
+
+    return pathStr;
+}
+
+void JsonParser::previous() {
     assertOpenFile();
-    assertString(newStr);
+
+    _traversedPath = getPreviousPath(_traversedPath.getData());
+
+    print();
+}
+
+void JsonParser::goBack() {
+    assertOpenFile();
+
+    _traversedPath.clear();
+
+    print();
+}
+
+void JsonParser::undo() {
+    _actionIsBeingUndone = true;
+    _undoData.lockAdding();
+
+    try {
+        _undoData.undo();
+    }
+    catch(const std::exception& exception) {
+        _actionIsBeingUndone = false;
+        _undoData.unlockAdding();
+
+        throw;
+    }
+
+    _actionIsBeingUndone = false;
+    _undoData.unlockAdding();
+
+    _changesHaveBeenMade = true;
+}
+
+void JsonParser::undoAll() {
+    _actionIsBeingUndone = true;
+    _undoData.lockAdding();
+
+    try {
+        _undoData.undoAll();
+    }
+    catch(const std::exception& exception) {
+        _actionIsBeingUndone = false;
+        _undoData.unlockAdding();
+
+        throw;
+    }
+
+    _actionIsBeingUndone = false;
+    _undoData.unlockAdding();
+
+    _changesHaveBeenMade = true;
+}
+
+void JsonParser::rename(const char* newKey, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+    assertKey(newKey);
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        jsonObjectPtr->set(path, newStr, 0);
+        jsonObjectPtr->rename(newKey, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
     }
-
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
         auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        jsonArrayPtr->set(path, newStr, 0);
+        jsonArrayPtr->rename(newKey, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
     }
 
     _changesHaveBeenMade = true;
+}
+
+void JsonParser::set(const SharedPtr<JsonNode>& newNode, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(getConcatenatedTraversalPath(path).isEmpty()) {
+        throw std::logic_error("Invalid set path");
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->set(newNode, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->set(newNode, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+    }
+
+    _changesHaveBeenMade = true;
+}
+
+void JsonParser::set(SharedPtr<JsonNode>&& newNode, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(getConcatenatedTraversalPath(path).isEmpty()) {
+        throw std::logic_error("Invalid set path");
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->set(std::move(newNode), getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->set(std::move(newNode), getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+    }
+
+    _changesHaveBeenMade = true;
+}
+
+void JsonParser::set(const char* newValue, const char* path, JsonNodeType type) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(getConcatenatedTraversalPath(path).isEmpty()) {
+        throw std::logic_error("Invalid set path");
+    }
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonObjectPtr->setEmptyObject(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonObjectPtr->setEmptyArray(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonObjectPtr->setString(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonObjectPtr->setKeyword(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonObjectPtr->setNumber(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+        }
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonArrayPtr->setEmptyObject(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonArrayPtr->setEmptyArray(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonArrayPtr->setString(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonArrayPtr->setKeyword(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonArrayPtr->setNumber(newValue, getConcatenatedTraversalPath(path).getData(), 0, _undoData);
+                break;
+        }
+    }
+
+    _changesHaveBeenMade = true;
+}
+
+void JsonParser::setEmptyObject(const char* path) {
+    set("", path, JsonNodeType::JSON_OBJECT);
+}
+
+void JsonParser::setEmptyArray(const char* path) {
+    set("", path, JsonNodeType::JSON_ARRAY);
+}
+
+void JsonParser::setString(const char* newStr, const char* path) {
+    set(newStr, path, JsonNodeType::JSON_STRING);
+}
+
+void JsonParser::setKeyword(const char* newKeyword, const char* path) {
+    set(newKeyword, path, JsonNodeType::JSON_KEYWORD);
+}
+
+void JsonParser::setNumber(const char* newNumber, const char* path) {
+    set(newNumber, path, JsonNodeType::JSON_NUMBER);
 }
 
 void JsonParser::remove(const char* path) {
     assertOpenFile();
+    assertNonInitiatedMove();
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        jsonObjectPtr->remove(path, 0);
+        jsonObjectPtr->remove(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
     }
-
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
         auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        jsonArrayPtr->remove(path, 0);
+        jsonArrayPtr->remove(getConcatenatedTraversalPath(path).getData(), 0, _undoData);
     }
 
     _changesHaveBeenMade = true;
 }
 
-void JsonParser::create(const char* path, bool isAddressingStartingNode, bool createInArray, const char* newKey, const char* newStr) {
+void JsonParser::createInArray(const SharedPtr<JsonNode>& newNode, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->create( { String(), newNode } , getConcatenatedTraversalPath(path).getData(), true, 0);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->create( { String(), newNode } , getConcatenatedTraversalPath(path).getData(), true, 0);
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(getConcatenatedTraversalPath(path).getData());
+}
+
+void JsonParser::createInArray(SharedPtr<JsonNode>&& newNode, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->create( { String(), std::move(newNode) } , getConcatenatedTraversalPath(path).getData(), true, 0);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->create( { String(), std::move(newNode) } , getConcatenatedTraversalPath(path).getData(), true, 0);
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(getConcatenatedTraversalPath(path).getData());
+}
+
+void JsonParser::createInObject(const JsonPair& newPair, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+    assertKey(newPair.getKey().getData());
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->create(newPair, getConcatenatedTraversalPath(path).getData(), false, 0);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->create(newPair, getConcatenatedTraversalPath(path).getData(), false, 0);
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(getConcatenatedTraversalPath(path).getData());
+}
+
+void JsonParser::createInObject(JsonPair&& newPair, const char* path) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+    assertKey(newPair.getKey().getData());
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        jsonObjectPtr->create(std::move(newPair), getConcatenatedTraversalPath(path).getData(), false, 0);
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        jsonArrayPtr->create(std::move(newPair), getConcatenatedTraversalPath(path).getData(), false, 0);
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(getConcatenatedTraversalPath(path).getData());
+}
+
+void JsonParser::createInArray(const char* newValue, const char* path, JsonNodeType type) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonObjectPtr->createEmptyObject("", getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonObjectPtr->createEmptyArray("", getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonObjectPtr->createString("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonObjectPtr->createKeyword("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonObjectPtr->createNumber("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+        }
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonArrayPtr->createEmptyObject("", getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonArrayPtr->createEmptyArray("", getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonArrayPtr->createString("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonArrayPtr->createKeyword("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonArrayPtr->createNumber("", newValue, getConcatenatedTraversalPath(path).getData(), true, 0);
+                break;
+        }
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(getConcatenatedTraversalPath(path).getData());
+}
+
+void JsonParser::createInObject(const char* newKey, const char* newValue, const char* path, JsonNodeType type) {
+    assertOpenFile();
+    assertNonInitiatedMove();
+    assertKey(newKey);
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonObjectPtr->createEmptyObject(newKey, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonObjectPtr->createEmptyArray(newKey, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonObjectPtr->createString(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonObjectPtr->createKeyword(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonObjectPtr->createNumber(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+        }
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        switch(type) {
+            case JsonNodeType::JSON_OBJECT:
+                jsonArrayPtr->createEmptyObject(newKey, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_ARRAY:
+                jsonArrayPtr->createEmptyArray(newKey, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_STRING:
+                jsonArrayPtr->createString(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_KEYWORD:
+                jsonArrayPtr->createKeyword(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+
+            case JsonNodeType::JSON_NUMBER:
+                jsonArrayPtr->createNumber(newKey, newValue, getConcatenatedTraversalPath(path).getData(), false, 0);
+                break;
+        }
+    }
+
+    _changesHaveBeenMade = true;
+
+    _undoData.addCreateUndoAction(addToPath(path, String(newKey)).getData());
+}
+
+void JsonParser::createEmptyObjectInArray(const char* path) {
+    createInArray("", path, JsonNodeType::JSON_OBJECT);
+}
+
+void JsonParser::createEmptyObjectInObject(const char* newKey, const char* path) {
+    createInObject(newKey, "", path, JsonNodeType::JSON_OBJECT);
+}
+
+void JsonParser::createEmptyArrayInArray(const char* path) {
+    createInArray("", path, JsonNodeType::JSON_ARRAY);
+}
+
+void JsonParser::createEmptyArrayInObject(const char* newKey, const char* path) {
+    createInObject(newKey, "", path, JsonNodeType::JSON_ARRAY);
+}
+
+void JsonParser::createStringInArray(const char* newStr, const char* path) {
+    createInArray(newStr, path, JsonNodeType::JSON_STRING);
+}
+
+void JsonParser::createStringInObject(const char* newKey, const char* newStr, const char* path) {
+    createInObject(newKey, newStr, path, JsonNodeType::JSON_STRING);
+}
+
+void JsonParser::createKeywordInArray(const char* newKeyword, const char* path) {
+    createInArray(newKeyword, path, JsonNodeType::JSON_KEYWORD);
+}
+
+void JsonParser::createKeywordInObject(const char* newKey, const char* newKeyword, const char* path) {
+    createInObject(newKey, newKeyword, path, JsonNodeType::JSON_KEYWORD);
+}
+
+void JsonParser::createNumberInArray(const char* newNumber, const char* path) {
+    createInArray(newNumber, path, JsonNodeType::JSON_NUMBER);
+}
+
+void JsonParser::createNumberInObject(const char* newKey, const char* newNumber, const char* path) {
+    createInObject(newKey, newNumber, path, JsonNodeType::JSON_NUMBER);
+}
+
+void JsonParser::moveFrom(const char* pathFrom) {
     assertOpenFile();
 
-    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
-
-        jsonObjectPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+    if(pathFrom[0] == '\0') {
+        throw std::invalid_argument("Invalid path for moving from");
     }
 
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
-        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+    String oldTraversedPath = _traversedPath;
 
-        jsonArrayPtr->create(path, isAddressingStartingNode, createInArray, newKey, newStr, 0);
+    traverse(pathFrom);
+
+    _moveFromPath = _traversedPath;
+    _traversedPath = oldTraversedPath;
+}
+
+void JsonParser::moveToArray(const char* pathTo, const char* pathFrom) {
+    assertOpenFile();
+
+    if(pathFrom[0] != '\0' && !_moveFromPath.isEmpty()) {
+        throw std::logic_error("Path to move from has already been given");
     }
 
-    _changesHaveBeenMade = true;
-}
-
-void JsonParser::createInArray(const char* path, const char* newStr) {
-    create(path, false, true, "", newStr);
-}
-
-void JsonParser::createInStartingObject(const char* newKey, const char* newStr) {
-    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        create("", true, false, newKey, newStr);
-        return;
+    if(pathFrom[0] == '\0' && _moveFromPath.isEmpty()) {
+        throw std::invalid_argument("Invalid path for moving from");
     }
 
-    throw std::logic_error("Starting Json Node is not a Json Object");
-}
-
-void JsonParser::createInObject(const char* path, const char* newKey, const char* newStr) {
-    create(path, false, false, newKey, newStr);
-}
-
-void JsonParser::move(const char* pathFrom, const char* pathTo, bool isAddressingStartingNode, bool moveInArray) {
+    bool removedFromArray = false;
+    JsonKey oldKey;
 
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        Pair<String, SharedPtr<JsonNode>> jsonPairForMoving = jsonObjectPtr->remove(pathFrom, 0);
+        JsonPair jsonPairForMoving;
 
-        if(jsonPairForMoving.getFirst().isEmpty()) {
-            jsonObjectPtr->move(pathTo, isAddressingStartingNode, moveInArray, "", std::move(jsonPairForMoving.accessSecond()), 0);
-            return;
+        if(!_moveFromPath.isEmpty()) {
+            jsonPairForMoving = jsonObjectPtr->moveRemove(_moveFromPath.getData(), 0);
+        }
+        else {
+            jsonPairForMoving = jsonObjectPtr->moveRemove(getConcatenatedTraversalPath(pathFrom).getData(), 0);
         }
 
-        jsonObjectPtr->move(pathTo, isAddressingStartingNode, moveInArray, jsonPairForMoving.accessFirst().getData(),
-                            std::move(jsonPairForMoving.accessSecond()), 0);
-    }
+        removedFromArray = strcmp(jsonPairForMoving.getKey().getData(), "") == 0;
+        oldKey = jsonPairForMoving.getKey();
 
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        try {
+            jsonObjectPtr->move(std::move(jsonPairForMoving), getConcatenatedTraversalPath(pathTo).getData(), true, 0);
+        }
+        catch(const std::exception& exception) {
+
+            if(!_moveFromPath.isEmpty()) {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()), _moveFromPath.getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving), _moveFromPath.getData());
+                }
+
+            }
+            else {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()),
+                                                         getConcatenatedTraversalPath(pathFrom).getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving),
+                                                          getConcatenatedTraversalPath(pathFrom).getData());
+                }
+            }
+
+            undo();
+            throw;
+        }
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
         auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        Pair<String, SharedPtr<JsonNode>> jsonPairForMoving = jsonArrayPtr->remove(pathFrom, 0);
+        JsonPair jsonPairForMoving;
 
-        if(jsonPairForMoving.getFirst().isEmpty()) {
-            jsonArrayPtr->move(pathTo, isAddressingStartingNode, moveInArray, "", std::move(jsonPairForMoving.accessSecond()), 0);
-            return;
+        if(!_moveFromPath.isEmpty()) {
+            jsonPairForMoving = jsonArrayPtr->moveRemove(_moveFromPath.getData(), 0);
+        }
+        else {
+            jsonPairForMoving = jsonArrayPtr->moveRemove(getConcatenatedTraversalPath(pathFrom).getData(), 0);
         }
 
-        jsonArrayPtr->move(pathTo, isAddressingStartingNode, moveInArray, jsonPairForMoving.accessFirst().getData(),
-                            std::move(jsonPairForMoving.accessSecond()), 0);
+        removedFromArray = strcmp(jsonPairForMoving.getKey().getData(), "") == 0;
+        oldKey = jsonPairForMoving.getKey();
+
+        try {
+            jsonArrayPtr->move(std::move(jsonPairForMoving), getConcatenatedTraversalPath(pathTo).getData(), true, 0);
+        }
+        catch(const std::exception& exception) {
+
+            if(!_moveFromPath.isEmpty()) {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()), _moveFromPath.getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving), _moveFromPath.getData());
+                }
+            }
+            else {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()),
+                                                         getConcatenatedTraversalPath(pathFrom).getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving),
+                                                          getConcatenatedTraversalPath(pathFrom).getData());
+                }
+            }
+
+            undo();
+            throw;
+        }
+    }
+
+    if(!_moveFromPath.isEmpty()) {
+
+        if(removedFromArray) {
+            _undoData.addMoveToArrayFromArrayUndoAction(getConcatenatedTraversalPath(pathTo).getData(), _moveFromPath.getData());
+        }
+        else {
+            _undoData.addMoveToArrayFromObjectUndoAction(getConcatenatedTraversalPath(pathTo).getData(), _moveFromPath.getData(),
+                                                         oldKey.getKeyString().getData());
+        }
+    }
+    else {
+
+        if(removedFromArray) {
+            _undoData.addMoveToArrayFromArrayUndoAction(getConcatenatedTraversalPath(pathTo).getData(),
+                                                        getConcatenatedTraversalPath(pathFrom).getData());
+        }
+        else {
+            _undoData.addMoveToArrayFromObjectUndoAction(getConcatenatedTraversalPath(pathTo).getData(),
+                                                         getConcatenatedTraversalPath(pathFrom).getData(),
+                                                         oldKey.getKeyString().getData());
+        }
+    }
+
+
+    _changesHaveBeenMade = true;
+    _moveFromPath.clear();
+}
+
+void JsonParser::moveToObject(const char* pathTo, const char* pathFrom, const char* oldKey) {
+    assertOpenFile();
+
+    if(pathFrom[0] != '\0' && !_moveFromPath.isEmpty()) {
+        throw std::logic_error("Path to move from has already been given");
+    }
+
+    if(pathFrom[0] == '\0' && _moveFromPath.isEmpty()) {
+        throw std::invalid_argument("Invalid path for moving from");
+    }
+
+    bool removedFromArray = false;
+
+    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
+        auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
+
+        JsonPair jsonPairForMoving;
+
+        if(!_moveFromPath.isEmpty()) {
+            jsonPairForMoving = jsonObjectPtr->moveRemove(_moveFromPath.getData(), 0);
+        }
+        else {
+            jsonPairForMoving = jsonObjectPtr->moveRemove(getConcatenatedTraversalPath(pathFrom).getData(), 0);
+        }
+
+        removedFromArray = strcmp(jsonPairForMoving.getKey().getData(), "") == 0;
+
+        if(strcmp(oldKey, "") != 0) {
+            jsonPairForMoving.accessKey().accessKeyString() = oldKey;
+        }
+
+        try {
+            jsonObjectPtr->move(std::move(jsonPairForMoving), getConcatenatedTraversalPath(pathTo).getData(), false, 0);
+        }
+        catch(const std::exception& exception) {
+
+            if(!_moveFromPath.isEmpty()) {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()), _moveFromPath.getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving), _moveFromPath.getData());
+                }
+
+            }
+            else {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()),
+                                                         getConcatenatedTraversalPath(pathFrom).getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving),
+                                                          getConcatenatedTraversalPath(pathFrom).getData());
+                }
+            }
+
+            undo();
+            throw;
+        }
+    }
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+        auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
+
+        JsonPair jsonPairForMoving;
+
+        if(!_moveFromPath.isEmpty()) {
+            jsonPairForMoving = jsonArrayPtr->moveRemove(_moveFromPath.getData(), 0);
+        }
+        else {
+            jsonPairForMoving = jsonArrayPtr->moveRemove(getConcatenatedTraversalPath(pathFrom).getData(), 0);
+        }
+
+        removedFromArray = strcmp(jsonPairForMoving.getKey().getData(), "") == 0;
+
+        if(strcmp(oldKey, "") != 0) {
+            jsonPairForMoving.accessKey().accessKeyString() = oldKey;
+        }
+
+        try {
+            jsonArrayPtr->move(std::move(jsonPairForMoving), getConcatenatedTraversalPath(pathTo).getData(), false, 0);
+        }
+        catch(const std::exception& exception) {
+
+            if(!_moveFromPath.isEmpty()) {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()), _moveFromPath.getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving), _moveFromPath.getData());
+                }
+            }
+            else {
+
+                if(removedFromArray) {
+                    _undoData.addRemoveUndoActionInArray(std::move(jsonPairForMoving.accessNode()),
+                                                         getConcatenatedTraversalPath(pathFrom).getData());
+                }
+                else {
+                    _undoData.addRemoveUndoActionInObject(std::move(jsonPairForMoving),
+                                                          getConcatenatedTraversalPath(pathFrom).getData());
+                }
+            }
+
+            undo();
+            throw;
+        }
+    }
+
+    if(!_moveFromPath.isEmpty()) {
+
+        if(removedFromArray) {
+            _undoData.addMoveToObjectFromArrayUndoAction(getConcatenatedTraversalPath(pathTo).getData(), _moveFromPath.getData());
+        }
+        else {
+            _undoData.addMoveToObjectFromObjectUndoAction(getConcatenatedTraversalPath(pathTo).getData(),
+                                                          _moveFromPath.getData(), "");
+        }
+    }
+    else {
+
+        if(removedFromArray) {
+            _undoData.addMoveToObjectFromArrayUndoAction(getConcatenatedTraversalPath(pathTo).getData(),
+                                                         getConcatenatedTraversalPath(pathFrom).getData());
+        }
+        else {
+            _undoData.addMoveToObjectFromObjectUndoAction(getConcatenatedTraversalPath(pathTo).getData(),
+                                                          getConcatenatedTraversalPath(pathFrom).getData(), "");
+        }
     }
 
     _changesHaveBeenMade = true;
+    _moveFromPath.clear();
 }
 
-void JsonParser::moveToArray(const char* pathFrom, const char* pathTo) {
-    move(pathFrom, pathTo, false, true);
-}
-
-void JsonParser::moveToStartingObject(const char* pathFrom) {
-    if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
-        move(pathFrom, "", true, false);
-        return;
-    }
-
-    throw std::logic_error("Starting Json Node is not a Json Object");
-}
-
-void JsonParser::moveToObject(const char* pathFrom, const char* pathTo) {
-    move(pathFrom, pathTo, false, false);
-}
-
-void JsonParser::save(const char* path, bool isAddressingStartingNode, const char* fileName) {
+void JsonParser::save(const char* fileName, const char* path) {
     assertOpenFile();
     assertJsonFileName(fileName);
 
@@ -287,46 +1010,22 @@ void JsonParser::save(const char* path, bool isAddressingStartingNode, const cha
     if(_startingNodeType == JsonNodeType::JSON_OBJECT) {
         auto* jsonObjectPtr = (JsonObject*) _startingNode[0].get();
 
-        if(isAddressingStartingNode) {
-            jsonObjectPtr->save(out, 0, false);
-
-            _changesHaveBeenMade = false;
-            return;
-        }
-
-        jsonObjectPtr->savePath(path, out, 0);
+        jsonObjectPtr->savePath(out, getConcatenatedTraversalPath(path).getData(), 0);
     }
-
-    if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
+    else if(_startingNodeType == JsonNodeType::JSON_ARRAY) {
         auto* jsonArrayPtr = (JsonArray*) _startingNode[0].get();
 
-        if(isAddressingStartingNode) {
-            jsonArrayPtr->save(out, 0, false);
-
-            _changesHaveBeenMade = false;
-            return;
-        }
-
-        jsonArrayPtr->savePath(path, out, 0);
+        jsonArrayPtr->savePath(out, getConcatenatedTraversalPath(path).getData(), 0);
     }
 
     _changesHaveBeenMade = false;
 }
 
-void JsonParser::save() {
-    save("", true, _fileName.getData());
-}
-
 void JsonParser::save(const char* path) {
-    save(path, false, _fileName.getData());
-}
 
-void JsonParser::saveAs(const char* fileName) {
-    if(strcmp(fileName, _fileName.getData()) == 0) {
-        throw std::invalid_argument("Given file name matches the one of the currently opened file");
+    if(_changesHaveBeenMade || path[0] != '\0') {
+        save( _fileName.getData(), path);
     }
-
-    save("", true, fileName);
 }
 
 void JsonParser::saveAs(const char* fileName, const char* path) {
@@ -334,5 +1033,5 @@ void JsonParser::saveAs(const char* fileName, const char* path) {
         throw std::invalid_argument("Given file name matches the one of the currently opened file");
     }
 
-    save(path, false, fileName);
+    save(fileName, path);
 }
