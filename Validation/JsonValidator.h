@@ -5,40 +5,39 @@
 class JsonValidator {
 private:
     String _tokens;
-    unsigned _tokenCount;
 
-    void assertIndex(unsigned index) const;
+    void assertIndex(long long index) const;
 
     void setTokens(std::ifstream& in);
 
     static void throwOutOfPlaceCharacterException(std::ifstream& in);
     static void throwNonTokenCharacterException(std::ifstream& in);
 
-    static void validateBoolBuildingInterception(std::ifstream& in, unsigned buildingOfTrueKeyword,
-                                                 unsigned buildingOfFalseKeyword, unsigned buildingOfNullKeyword);
+    static void validateBoolBuildingInterception(std::ifstream& in, long long buildingOfTrueKeyword,
+                                                 long long buildingOfFalseKeyword, long long buildingOfNullKeyword);
     static void validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt);
 
-    static void validateT(std::ifstream& in, unsigned& buildingOfKeywordTrue);
-    static void validateR(std::ifstream& in, unsigned& buildingOfKeywordTrue);
-    static void validateU(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordNull);
-    static void validateE(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordFalse);
-    static void validateF(std::ifstream& in, unsigned& buildingOfKeywordFalse);
-    static void validateA(std::ifstream& in, unsigned& buildingOfKeywordFalse);
-    static void validateL(std::ifstream& in, unsigned& buildingOfKeywordFalse, unsigned& buildingOfKeywordNull);
-    static void validateS(std::ifstream& in, unsigned& buildingOfKeywordFalse);
-    static void validateN(std::ifstream& in, unsigned& buildingOfKeywordNull);
+    static void validateT(std::ifstream& in, long long& buildingOfKeywordTrue);
+    static void validateR(std::ifstream& in, long long& buildingOfKeywordTrue);
+    static void validateU(std::ifstream& in, long long& buildingOfKeywordTrue, long long& buildingOfKeywordNull);
+    static void validateE(std::ifstream& in, long long& buildingOfKeywordTrue, long long& buildingOfKeywordFalse);
+    static void validateF(std::ifstream& in, long long& buildingOfKeywordFalse);
+    static void validateA(std::ifstream& in, long long& buildingOfKeywordFalse);
+    static void validateL(std::ifstream& in, long long& buildingOfKeywordFalse, long long& buildingOfKeywordNull);
+    static void validateS(std::ifstream& in, long long& buildingOfKeywordFalse);
+    static void validateN(std::ifstream& in, long long& buildingOfKeywordNull);
 
-    long long getLastPositionOfToken(char token, unsigned fromIndex) const;
-    char getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const;
-    char getNextNonNewLineToken(unsigned index) const;
-    unsigned getRowPositionOfToken(unsigned index) const;
+    long long getLastPositionOfToken(char token, long long fromIndex) const;
+    char getPrecedingNonNewLineTokens(long long index, long long tokensBack) const;
+    char getNextNonNewLineToken(long long index) const;
+    long long getRowPositionOfToken(long long index) const;
 
     bool tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                   long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
-                                  unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const;
+                                  long long nestedJsonObjectCount, long long nestedJsonArrayCount) const;
     bool tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                  long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
-                                 unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const;
+                                 long long nestedJsonObjectCount, long long nestedJsonArrayCount) const;
 
     static bool validTokenBeforeOpenBrace(char token);
     static bool validTokenBeforeClosedBrace(char previousToken, char tokenThreePositionsBack);
@@ -53,7 +52,7 @@ private:
 
     static bool validTokenBeforeMinusInJsonObject(char previousToken, char nextToken);
     static bool validTokenBeforeMinusInJsonArray(char previousToken, char nextToken);
-    static bool validTokenBeforeDot(char previousToken, char nextToken);
+    static bool validTokenBeforeDecimalPoint(char previousToken, char nextToken);
 
     static bool validTokenBeforeValueKeywordInJsonObject(char token);
     static bool validTokenBeforeValueKeywordInJsonArray(char token);
@@ -70,7 +69,7 @@ private:
     void validateBracketPlacement() const;
 
     void validateDigitPlacement() const;
-    void validateDotPlacement() const;
+    void validateDecimalPointPlacement() const;
     void validateMinusPlacement() const;
     void validateValueKeywordPlacement() const;
 

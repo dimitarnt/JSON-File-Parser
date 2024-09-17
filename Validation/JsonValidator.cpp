@@ -1,9 +1,10 @@
 #include "JsonValidator.h"
 #include "InvalidJsonSyntax.h"
 #include "fileFunctions.h"
+#include "helperFunctions.h"
 
-void JsonValidator::assertIndex(unsigned index) const {
-    if(index > (_tokenCount - 1)) {
+void JsonValidator::assertIndex(long long index) const {
+    if(index < 0 || index > (_tokens.getLength() - 1)) {
         throw std::out_of_range("Error, index is out of range");
     }
 }
@@ -11,11 +12,11 @@ void JsonValidator::assertIndex(unsigned index) const {
 void JsonValidator::setTokens(std::ifstream& in) {
     bool stringHasNotBeenClosed = false;
     bool numberIsBeingBuilt = false;
-    unsigned buildingOfKeywordTrue = 0;
-    unsigned buildingOfKeywordFalse = 0;
-    unsigned buildingOfKeywordNull = 0;
+    long long buildingOfKeywordTrue = 0;
+    long long buildingOfKeywordFalse = 0;
+    long long buildingOfKeywordNull = 0;
 
-    unsigned previousPosition = in.tellg();
+    long long previousPosition = in.tellg();
 
     while (true) {
         char currentSymbol = (char) in.get();
@@ -158,8 +159,6 @@ void JsonValidator::setTokens(std::ifstream& in) {
     }
     in.clear();
     in.seekg(previousPosition);
-
-    _tokenCount = _tokens.getLength();
 }
 
 void JsonValidator::throwOutOfPlaceCharacterException(std::ifstream& in) {
@@ -176,8 +175,8 @@ void JsonValidator::throwNonTokenCharacterException(std::ifstream& in) {
     throw InvalidJsonSyntax(message);
 }
 
-void JsonValidator::validateBoolBuildingInterception(std::ifstream& in, unsigned buildingOfKeywordTrue,
-                                                     unsigned buildingOfKeywordFalse, unsigned buildingOfKeywordNull) {
+void JsonValidator::validateBoolBuildingInterception(std::ifstream& in, long long buildingOfKeywordTrue,
+                                                     long long buildingOfKeywordFalse, long long buildingOfKeywordNull) {
 
     if(buildingOfKeywordTrue != 0 || buildingOfKeywordFalse != 0 || buildingOfKeywordNull != 0) {
         String message("Unfinished bool keyword at row ");
@@ -190,7 +189,7 @@ void JsonValidator::validateBoolBuildingInterception(std::ifstream& in, unsigned
 void JsonValidator::validateNumberBuildingInterception(std::ifstream& in, bool numberIsBeingBuilt) {
     char nextToken = (char)in.peek();
 
-    if(numberIsBeingBuilt && ((nextToken >= '0' && nextToken <= '9') || nextToken == '.')) {
+    if(numberIsBeingBuilt && (isDigit(nextToken) || nextToken == '.')) {
         String message("Disallowed character in number at row ");
         message += getLinesCount(in, in.tellg());
 
@@ -198,21 +197,21 @@ void JsonValidator::validateNumberBuildingInterception(std::ifstream& in, bool n
     }
 }
 
-void JsonValidator::validateT(std::ifstream& in, unsigned& buildingOfKeywordTrue) {
+void JsonValidator::validateT(std::ifstream& in, long long& buildingOfKeywordTrue) {
     if(buildingOfKeywordTrue != 0) {
         throwOutOfPlaceCharacterException(in);
     }
     buildingOfKeywordTrue = 1;
 }
 
-void JsonValidator::validateR(std::ifstream& in, unsigned& buildingOfKeywordTrue) {
+void JsonValidator::validateR(std::ifstream& in, long long& buildingOfKeywordTrue) {
     if(buildingOfKeywordTrue != 1) {
         throwOutOfPlaceCharacterException(in);
     }
     buildingOfKeywordTrue = 2;
 }
 
-void JsonValidator::validateU(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordNull) {
+void JsonValidator::validateU(std::ifstream& in, long long& buildingOfKeywordTrue, long long& buildingOfKeywordNull) {
     if(!(buildingOfKeywordTrue == 2 || buildingOfKeywordNull == 1)) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -220,7 +219,7 @@ void JsonValidator::validateU(std::ifstream& in, unsigned& buildingOfKeywordTrue
     buildingOfKeywordTrue == 2 ? buildingOfKeywordTrue = 3 : buildingOfKeywordNull = 2;
 }
 
-void JsonValidator::validateE(std::ifstream& in, unsigned& buildingOfKeywordTrue, unsigned& buildingOfKeywordFalse) {
+void JsonValidator::validateE(std::ifstream& in, long long& buildingOfKeywordTrue, long long& buildingOfKeywordFalse) {
     if(!(buildingOfKeywordTrue == 3 || buildingOfKeywordFalse == 4)) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -228,7 +227,7 @@ void JsonValidator::validateE(std::ifstream& in, unsigned& buildingOfKeywordTrue
     buildingOfKeywordTrue == 3 ? buildingOfKeywordTrue = 0 : buildingOfKeywordFalse = 0;
 }
 
-void JsonValidator::validateF(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+void JsonValidator::validateF(std::ifstream& in, long long& buildingOfKeywordFalse) {
     if(buildingOfKeywordFalse != 0) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -236,7 +235,7 @@ void JsonValidator::validateF(std::ifstream& in, unsigned& buildingOfKeywordFals
     buildingOfKeywordFalse = 1;
 }
 
-void JsonValidator::validateA(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+void JsonValidator::validateA(std::ifstream& in, long long& buildingOfKeywordFalse) {
     if(buildingOfKeywordFalse != 1) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -244,7 +243,7 @@ void JsonValidator::validateA(std::ifstream& in, unsigned& buildingOfKeywordFals
     buildingOfKeywordFalse = 2;
 }
 
-void JsonValidator::validateL(std::ifstream& in, unsigned& buildingOfKeywordFalse, unsigned& buildingOfKeywordNull) {
+void JsonValidator::validateL(std::ifstream& in, long long& buildingOfKeywordFalse, long long& buildingOfKeywordNull) {
     if(!(buildingOfKeywordFalse == 2 || buildingOfKeywordNull == 2 || buildingOfKeywordNull == 3)) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -253,7 +252,7 @@ void JsonValidator::validateL(std::ifstream& in, unsigned& buildingOfKeywordFals
     (buildingOfKeywordNull == 2 ? buildingOfKeywordNull = 3 : buildingOfKeywordNull = 0);
 }
 
-void JsonValidator::validateS(std::ifstream& in, unsigned& buildingOfKeywordFalse) {
+void JsonValidator::validateS(std::ifstream& in, long long& buildingOfKeywordFalse) {
     if(buildingOfKeywordFalse != 3) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -261,7 +260,7 @@ void JsonValidator::validateS(std::ifstream& in, unsigned& buildingOfKeywordFals
     buildingOfKeywordFalse = 4;
 }
 
-void JsonValidator::validateN(std::ifstream& in, unsigned& buildingOfKeywordNull) {
+void JsonValidator::validateN(std::ifstream& in, long long& buildingOfKeywordNull) {
     if(buildingOfKeywordNull != 0) {
         throwOutOfPlaceCharacterException(in);
     }
@@ -269,27 +268,33 @@ void JsonValidator::validateN(std::ifstream& in, unsigned& buildingOfKeywordNull
     buildingOfKeywordNull = 1;
 }
 
-long long JsonValidator::getLastPositionOfToken(char token, unsigned fromIndex) const {
+long long JsonValidator::getLastPositionOfToken(char token, long long fromIndex) const {
     assertIndex(fromIndex);
 
-    for(unsigned i = fromIndex; i <= fromIndex; --i) {
-        if(_tokens[i] == token) {
-            return i;
+    for(long long i = 0; i <= fromIndex; ++i) {
+        if(_tokens[fromIndex - i] == token) {
+            return fromIndex - i;
         }
     }
 
     return -1;
 }
 
-char JsonValidator::getPrecedingNonNewLineTokens(unsigned index, unsigned tokensBack) const {
+char JsonValidator::getPrecedingNonNewLineTokens(long long index, long long tokensBack) const {
     assertIndex(index);
+    size_t tokenCount = _tokens.getLength();
 
     if(tokensBack == 0) {
         return _tokens[index];
     }
+
+    if(index == 0) {
+        return 0;
+    }
+
     index--;
 
-    while(index < _tokenCount) {
+    while(index < tokenCount) {
         if(_tokens[index] != '\n') {
             tokensBack--;
 
@@ -303,12 +308,13 @@ char JsonValidator::getPrecedingNonNewLineTokens(unsigned index, unsigned tokens
     return 0;
 }
 
-char JsonValidator::getNextNonNewLineToken(unsigned index) const {
+char JsonValidator::getNextNonNewLineToken(long long index) const {
     assertIndex(index + 1);
+    size_t tokenCount = _tokens.getLength();
 
     index++;
 
-    while(index < _tokenCount) {
+    while(index < tokenCount) {
         if(_tokens[index] != '\n') {
             return _tokens[index];
         }
@@ -318,9 +324,9 @@ char JsonValidator::getNextNonNewLineToken(unsigned index) const {
     return 0;
 }
 
-unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
+long long JsonValidator::getRowPositionOfToken(long long index) const {
     assertIndex(index);
-    unsigned rows = 1;
+    long long rows = 1;
 
     for(int i = 0; i < index; ++i) {
         if(_tokens[i] == '\n') {
@@ -335,7 +341,7 @@ unsigned JsonValidator::getRowPositionOfToken(unsigned index) const {
 //A recursive algorithm is implemented to pass through nested objects and nested arrays
 bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                              long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
-                                             unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
+                                             long long nestedJsonObjectCount, long long nestedJsonArrayCount) const {
 
     if(lastPositionOfOpenBrace > lastPositionOfClosedBrace && lastPositionOfOpenBrace > lastPositionOfOpenBracket
         && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
@@ -404,7 +410,7 @@ bool JsonValidator::tokenIsInJsonObjectScope(long long lastPositionOfOpenBrace, 
 //A recursive algorithm is implemented to pass through nested objects and nested arrays
 bool JsonValidator::tokenIsInJsonArrayScope(long long lastPositionOfOpenBrace, long long lastPositionOfClosedBrace,
                                             long long lastPositionOfOpenBracket, long long lastPositionOfClosedBracket,
-                                            unsigned nestedJsonObjectCount, unsigned nestedJsonArrayCount) const {
+                                            long long nestedJsonObjectCount, long long nestedJsonArrayCount) const {
 
     if(lastPositionOfOpenBrace > lastPositionOfClosedBrace && lastPositionOfOpenBrace > lastPositionOfOpenBracket
        && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
@@ -488,7 +494,7 @@ bool JsonValidator::validTokenBeforeOpenBracket(char token) {
 
 bool JsonValidator::validTokenBeforeClosedBracket(char token) {
 
-    return token == '}' || token == '\"' || token == '[' || token == ']' || token == 'e' || token == 'l' || (token >= '0' && token <= '9');
+    return token == '}' || token == '\"' || token == '[' || token == ']' || token == 'e' || token == 'l' || isDigit(token);
 }
 
 bool JsonValidator::validZeroPlacementInJsonObject(char previousToken, char nextToken) {
@@ -503,27 +509,27 @@ bool JsonValidator::validZeroPlacementInJsonArray(char previousToken, char nextT
 
 bool JsonValidator::validTokenBeforeDigitInJsonObject(char token) {
 
-    return token == ':' || token == '-' || token == '.' || (token >= '0' && token <= '9');
+    return token == ':' || token == '-' || token == '.' || isDigit(token);
 }
 
 bool JsonValidator::validTokenBeforeDigitInJsonArray(char token) {
 
-    return token == '[' || token == ',' || token == '-' || token == '.' || (token >= '0' && token <= '9');
+    return token == '[' || token == ',' || token == '-' || token == '.' || isDigit(token);
 }
 
 bool JsonValidator::validTokenBeforeMinusInJsonObject(char previousToken, char nextToken) {
 
-    return previousToken == ':' && nextToken >= '0' && nextToken <= '9';
+    return previousToken == ':' && isDigit(nextToken);
 }
 
 bool JsonValidator::validTokenBeforeMinusInJsonArray(char previousToken, char nextToken) {
 
-    return (previousToken == ',' || previousToken == '[') && nextToken >= '0' && nextToken <= '9';
+    return (previousToken == ',' || previousToken == '[') && isDigit(nextToken);
 }
 
-bool JsonValidator::validTokenBeforeDot(char previousToken, char nextToken) {
+bool JsonValidator::validTokenBeforeDecimalPoint(char previousToken, char nextToken) {
 
-    return previousToken >= '0' && previousToken <= '9' && nextToken >= '0' && nextToken <= '9';
+    return isDigit(previousToken) && isDigit(nextToken);
 }
 
 bool JsonValidator::validTokenBeforeValueKeywordInJsonObject(char token) {
@@ -554,56 +560,56 @@ bool JsonValidator::validTokensPrecedingCommaInJsonObject(char previousToken, ch
 
 bool JsonValidator::validTokensPrecedingCommaInJsonArray(char token) {
 
-    return token == '\"' || token == '}' || token == ']' || token == 'e' || token == 'l' || (token >= '0' && token <= '9');
+    return token == '\"' || token == '}' || token == ']' || token == 'e' || token == 'l' || isDigit(token);
 }
 
 void JsonValidator::validateBraceMatching() const {
-    unsigned numberOfOpenBraces = getCharCount(_tokens.getData(), _tokenCount, '{');
-    unsigned numberOfClosedBraces = getCharCount(_tokens.getData(), _tokenCount, '}');
+    long long numberOfOpenBraces = _tokens.getCharCount('{');
+    long long numberOfClosedBraces = _tokens.getCharCount('}');
 
     if(numberOfOpenBraces < numberOfClosedBraces) {
-        long long lastPositionOfClosedBrace = getLastPositionOfToken('}', _tokenCount - 1);
+        long long lastPositionOfClosedBrace = getLastPositionOfToken('}', _tokens.getLength() - 1);
 
         String message("Extraneous closed brace at row ");
-        message += getRowPositionOfToken(lastPositionOfClosedBrace);
+        message += (size_t)getRowPositionOfToken(lastPositionOfClosedBrace);
 
         throw InvalidJsonSyntax(message);
     }
 
     if(numberOfOpenBraces > numberOfClosedBraces) {
-        long long firstPositionOfOpenBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '{', 1);
+        long long firstPositionOfOpenBrace = _tokens.getPositionOfChar('{', 1);
 
         String message("No matching closed brace of open brace at row ");
-        message += getRowPositionOfToken(firstPositionOfOpenBrace);
+        message += (size_t)getRowPositionOfToken(firstPositionOfOpenBrace);
 
         throw InvalidJsonSyntax(message);
     }
 }
 
 void JsonValidator::validateBracePlacement() const {
-    unsigned numberOfOpenBraces = getCharCount(_tokens.getData(), _tokenCount, '{');
-    unsigned numberOfClosedBraces = getCharCount(_tokens.getData(), _tokenCount, '}');
+    long long numberOfOpenBraces = _tokens.getCharCount('{');
+    long long numberOfClosedBraces = _tokens.getCharCount('}');
 
-    for(unsigned i = 0; i < numberOfOpenBraces; ++i) {
-        long long positionOfOpenBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '{', i + 1);
+    for(long long i = 0; i < numberOfOpenBraces; ++i) {
+        long long positionOfOpenBrace = _tokens.getPositionOfChar('{', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBrace, 1);
 
         if(!validTokenBeforeOpenBrace(previousToken)) {
             String message("Out of place open brace at row ");
-            message += getRowPositionOfToken(positionOfOpenBrace);
+            message += (size_t)getRowPositionOfToken(positionOfOpenBrace);
 
             throw InvalidJsonSyntax(message);
         }
     }
 
-    for(unsigned i = 0; i < numberOfClosedBraces; ++i) {
-        long long positionOfClosedBrace = getPositionOfChar(_tokens.getData(), _tokenCount, '}', i + 1);
+    for(long long i = 0; i < numberOfClosedBraces; ++i) {
+        long long positionOfClosedBrace = _tokens.getPositionOfChar('}', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBrace, 1);
         char tokenThreePositionsBack = getPrecedingNonNewLineTokens(positionOfClosedBrace, 3);
 
         if(!validTokenBeforeClosedBrace(previousToken, tokenThreePositionsBack)) {
             String message("Out of place closed brace at row ");
-            message += getRowPositionOfToken(positionOfClosedBrace);
+            message += (size_t)getRowPositionOfToken(positionOfClosedBrace);
 
             throw InvalidJsonSyntax(message);
         }
@@ -618,7 +624,7 @@ void JsonValidator::validateBracePlacement() const {
             && lastPositionOfOpenBracket > lastPositionOfClosedBracket) {
 
             String message("Out of place closed brace at row ");
-            message += getRowPositionOfToken(positionOfClosedBrace);
+            message += (size_t)getRowPositionOfToken(positionOfClosedBrace);
 
             throw InvalidJsonSyntax(message);
         }
@@ -626,51 +632,51 @@ void JsonValidator::validateBracePlacement() const {
 }
 
 void JsonValidator::validateBracketMatching() const {
-    unsigned numberOfOpenBrackets = getCharCount(_tokens.getData(), _tokenCount, '[');
-    unsigned numberOfClosedBrackets = getCharCount(_tokens.getData(), _tokenCount, ']');
+    long long numberOfOpenBrackets = _tokens.getCharCount('[');
+    long long numberOfClosedBrackets = _tokens.getCharCount(']');
 
     if(numberOfOpenBrackets < numberOfClosedBrackets) {
-        long long lastPositionOfClosedBracket = getLastPositionOfToken(']', _tokenCount - 1);
+        long long lastPositionOfClosedBracket = getLastPositionOfToken(']', _tokens.getLength() - 1);
 
         String message("Extraneous closed bracket at row ");
-        message += getRowPositionOfToken(lastPositionOfClosedBracket);
+        message += (size_t)getRowPositionOfToken(lastPositionOfClosedBracket);
 
         throw InvalidJsonSyntax(message);
     }
 
     if(numberOfOpenBrackets > numberOfClosedBrackets) {
-        long long firstPositionOfOpenBracket = getPositionOfChar(_tokens.getData(), _tokenCount, '[', 1);
+        long long firstPositionOfOpenBracket = _tokens.getPositionOfChar('[', 1);
 
         String message("No matching closed bracket at row ");
-        message += getRowPositionOfToken(firstPositionOfOpenBracket);
+        message += (size_t)getRowPositionOfToken(firstPositionOfOpenBracket);
 
         throw InvalidJsonSyntax(message);
     }
 }
 
 void JsonValidator::validateBracketPlacement() const {
-    unsigned numberOfOpenBrackets = getCharCount(_tokens.getData(), _tokenCount, '[');
-    unsigned numberOfClosedBrackets = getCharCount(_tokens.getData(), _tokenCount, ']');
+    long long numberOfOpenBrackets = _tokens.getCharCount('[');
+    long long numberOfClosedBrackets = _tokens.getCharCount(']');
 
-    for(unsigned i = 0; i < numberOfOpenBrackets; ++i) {
-        long long positionOfOpenBracket = getPositionOfChar(_tokens.getData(), _tokenCount, '[', i + 1);
+    for(long long i = 0; i < numberOfOpenBrackets; ++i) {
+        long long positionOfOpenBracket = _tokens.getPositionOfChar('[', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfOpenBracket, 1);
 
         if(!validTokenBeforeOpenBracket(previousToken)) {
             String message("Out of place open bracket at row ");
-            message += getRowPositionOfToken(positionOfOpenBracket);
+            message += (size_t)getRowPositionOfToken(positionOfOpenBracket);
 
             throw InvalidJsonSyntax(message);
         }
     }
 
-    for(unsigned i = 0; i < numberOfClosedBrackets; ++i) {
-        long long positionOfClosedBracket = getPositionOfChar(_tokens.getData(), _tokenCount, ']', i + 1);
+    for(long long i = 0; i < numberOfClosedBrackets; ++i) {
+        long long positionOfClosedBracket = _tokens.getPositionOfChar(']', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfClosedBracket, 1);
 
         if(!validTokenBeforeClosedBracket(previousToken)) {
             String message("Out of place closed bracket at row ");
-            message += getRowPositionOfToken(positionOfClosedBracket);
+            message += (size_t)getRowPositionOfToken(positionOfClosedBracket);
 
             throw InvalidJsonSyntax(message);
         }
@@ -685,7 +691,7 @@ void JsonValidator::validateBracketPlacement() const {
            && lastPositionOfOpenBrace > lastPositionOfClosedBracket) {
 
             String message("Out of place closed brace at row ");
-            message += getRowPositionOfToken(positionOfClosedBracket);
+            message += (size_t)getRowPositionOfToken(positionOfClosedBracket);
 
             throw InvalidJsonSyntax(message);
         }
@@ -695,11 +701,11 @@ void JsonValidator::validateBracketPlacement() const {
 void JsonValidator::validateDigitPlacement() const {
 
     //Validating zeros then ones then twos etc.
-    for(unsigned i = 0; i < NUMBER_OF_DIGITS; ++i) {
-        unsigned currentDigitCount = getCharCount(_tokens.getData(), _tokenCount, '0' + i);
+    for(long long i = 0; i < NUMBER_OF_DIGITS; ++i) {
+        long long currentDigitCount = _tokens.getCharCount('0' + i);
 
-        for(unsigned j = 0; j < currentDigitCount; ++j) {
-            long long positionOfCurrentDigit = getPositionOfChar(_tokens.getData(), _tokenCount, '0' + i, j + 1);
+        for(long long j = 0; j < currentDigitCount; ++j) {
+            long long positionOfCurrentDigit = _tokens.getPositionOfChar('0' + i, j + 1);
             long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfCurrentDigit);
             long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfCurrentDigit);
             long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfCurrentDigit);
@@ -712,14 +718,14 @@ void JsonValidator::validateDigitPlacement() const {
 
                 if(('0' + i) == '0' && (!validZeroPlacementInJsonObject(previousToken, nextToken) || !validTokenBeforeDigitInJsonObject(previousToken))) {
                     String message("Out of place 0 at row ");
-                    message += getRowPositionOfToken(positionOfCurrentDigit);
+                    message += (size_t)getRowPositionOfToken(positionOfCurrentDigit);
 
                     throw InvalidJsonSyntax(message);
                 }
 
                 if(!validTokenBeforeDigitInJsonObject(previousToken)) {
                     String message("Out of place digit at row ");
-                    message += getRowPositionOfToken(positionOfCurrentDigit);
+                    message += (size_t)getRowPositionOfToken(positionOfCurrentDigit);
 
                     throw InvalidJsonSyntax(message);
                 }
@@ -729,14 +735,14 @@ void JsonValidator::validateDigitPlacement() const {
 
                 if(('0' + i) == '0' && (!validZeroPlacementInJsonArray(previousToken, nextToken) || !validTokenBeforeDigitInJsonArray(previousToken))) {
                     String message("Out of place 0 at row ");
-                    message += getRowPositionOfToken(positionOfCurrentDigit);
+                    message += (size_t)getRowPositionOfToken(positionOfCurrentDigit);
 
                     throw InvalidJsonSyntax(message);
                 }
 
                 if(!validTokenBeforeDigitInJsonArray(previousToken)) {
                     String message("Out of place digit at row ");
-                    message += getRowPositionOfToken(positionOfCurrentDigit);
+                    message += (size_t)getRowPositionOfToken(positionOfCurrentDigit);
 
                     throw InvalidJsonSyntax(message);
                 }
@@ -745,29 +751,45 @@ void JsonValidator::validateDigitPlacement() const {
     }
 }
 
-void JsonValidator::validateDotPlacement() const {
-    unsigned numberOfDots = getCharCount(_tokens.getData(), _tokenCount, '.');
+void JsonValidator::validateDecimalPointPlacement() const {
+    long long numberOfDecimalPoints = _tokens.getCharCount('.');
 
-    for(unsigned i = 0; i < numberOfDots; ++i) {
-        long long positionOfDot = getPositionOfChar(_tokens.getData(), _tokenCount, '.', i + 1);
+    for(long long i = 0; i < numberOfDecimalPoints; ++i) {
+        long long positionOfDecimalPoint = _tokens.getPositionOfChar('.', i + 1);
 
-        char previousToken = getPrecedingNonNewLineTokens(positionOfDot, 1);
-        char nextToken = getNextNonNewLineToken(positionOfDot);
+        char previousToken = getPrecedingNonNewLineTokens(positionOfDecimalPoint, 1);
+        char nextToken = getNextNonNewLineToken(positionOfDecimalPoint);
 
-        if(!validTokenBeforeDot(previousToken, nextToken)) {
-            String message("Out of place dot at row ");
-            message += getRowPositionOfToken(positionOfDot);
+        if(!validTokenBeforeDecimalPoint(previousToken, nextToken)) {
+            String message("Out of place decimal point at row ");
+            message += (size_t)getRowPositionOfToken(positionOfDecimalPoint);
 
             throw InvalidJsonSyntax(message);
         }
+
+        for(long long j = 2; true; ++j) {
+            previousToken = getPrecedingNonNewLineTokens(positionOfDecimalPoint, j);
+
+            if(previousToken == '.') {
+                String message("Multiple decimal points in number at row ");
+                message += (size_t)getRowPositionOfToken(positionOfDecimalPoint);
+
+                throw InvalidJsonSyntax(message);
+            }
+
+            if(!isDigit(previousToken)) {
+                break;
+            }
+        }
+
     }
 }
 
 void JsonValidator::validateMinusPlacement() const {
-    unsigned numberOfMinuses = getCharCount(_tokens.getData(), _tokenCount, '-');
+    long long numberOfMinuses = _tokens.getCharCount('-');
 
-    for(unsigned i = 0; i < numberOfMinuses; ++i) {
-        long long positionOfMinuses = getPositionOfChar(_tokens.getData(), _tokenCount, '-', i + 1);
+    for(long long i = 0; i < numberOfMinuses; ++i) {
+        long long positionOfMinuses = _tokens.getPositionOfChar('-', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfMinuses);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfMinuses);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfMinuses);
@@ -780,7 +802,7 @@ void JsonValidator::validateMinusPlacement() const {
            && !validTokenBeforeMinusInJsonObject(previousToken, nextToken)) {
 
             String message("Out of place minus at row ");
-            message += getRowPositionOfToken(positionOfMinuses);
+            message += (size_t)getRowPositionOfToken(positionOfMinuses);
 
             throw InvalidJsonSyntax(message);
         }
@@ -789,7 +811,7 @@ void JsonValidator::validateMinusPlacement() const {
            && !validTokenBeforeMinusInJsonArray(previousToken, nextToken)) {
 
             String message("Out of place minus at row ");
-            message += getRowPositionOfToken(positionOfMinuses);
+            message += (size_t)getRowPositionOfToken(positionOfMinuses);
 
             throw InvalidJsonSyntax(message);
         }
@@ -799,29 +821,29 @@ void JsonValidator::validateMinusPlacement() const {
 void JsonValidator::validateValueKeywordPlacement() const {
 
     //Validating true then false then null keywords
-    for(unsigned i = 0; i < NUMBER_OF_JSON_KEYWORDS; ++i) {
+    for(long long i = 0; i < NUMBER_OF_JSON_KEYWORDS; ++i) {
         char firstCharacterOfKeyword = 0;
-        unsigned currentKeywordCount = 0;
+        long long currentKeywordCount = 0;
 
         switch(i) {
             case 0:
                 firstCharacterOfKeyword = 't';
-                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 't');
+                currentKeywordCount = _tokens.getCharCount('t');
                 break;
             case 1:
                 firstCharacterOfKeyword = 'f';
-                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 'f');
+                currentKeywordCount = _tokens.getCharCount('f');
                 break;
             case 2:
                 firstCharacterOfKeyword = 'n';
-                currentKeywordCount = getCharCount(_tokens.getData(), _tokenCount, 'n');
+                currentKeywordCount = _tokens.getCharCount('n');
                 break;
             default:
                 throw std::runtime_error("No implementation for validation of new keyword");
         }
 
-        for(unsigned j = 0; j < currentKeywordCount; ++j) {
-            long long positionOfKeyword = getPositionOfChar(_tokens.getData(), _tokenCount, firstCharacterOfKeyword, j + 1);
+        for(long long j = 0; j < currentKeywordCount; ++j) {
+            long long positionOfKeyword = _tokens.getPositionOfChar(firstCharacterOfKeyword, j + 1);
             long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfKeyword);
             long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfKeyword);
             long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfKeyword);
@@ -833,7 +855,7 @@ void JsonValidator::validateValueKeywordPlacement() const {
                && !validTokenBeforeValueKeywordInJsonObject(previousToken)) {
 
                 String message("Out of place keyword at row ");
-                message += getRowPositionOfToken(positionOfKeyword);
+                message += (size_t)getRowPositionOfToken(positionOfKeyword);
 
                 throw InvalidJsonSyntax(message);
             }
@@ -842,7 +864,7 @@ void JsonValidator::validateValueKeywordPlacement() const {
                && !validTokenBeforeValueKeywordInJsonArray(previousToken)) {
 
                 String message("Out of place keyword at row ");
-                message += getRowPositionOfToken(positionOfKeyword);
+                message += (size_t)getRowPositionOfToken(positionOfKeyword);
 
                 throw InvalidJsonSyntax(message);
             }
@@ -852,16 +874,16 @@ void JsonValidator::validateValueKeywordPlacement() const {
 }
 
 void JsonValidator::validateQuotationMarkPlacement() const {
-    unsigned numberOfQuotationMarks = getCharCount(_tokens.getData(), _tokenCount, '\"');
+    long long numberOfQuotationMarks = _tokens.getCharCount('\"');
 
-    for(unsigned i = 0; i < numberOfQuotationMarks; ++i) {
-        long long positionOfQuotationMark = getPositionOfChar(_tokens.getData(), _tokenCount, '\"', i + 1);
+    for(long long i = 0; i < numberOfQuotationMarks; ++i) {
+        long long positionOfQuotationMark = _tokens.getPositionOfChar('\"', i + 1);
         char previousToken = getPrecedingNonNewLineTokens(positionOfQuotationMark, 1);
         char tokenTwoPositionsBack = getPrecedingNonNewLineTokens(positionOfQuotationMark, 2);
 
         if(!validTokenBeforeQuotationMark(previousToken, tokenTwoPositionsBack)) {
             String message("Out of place quotation mark at row ");
-            message += getRowPositionOfToken(positionOfQuotationMark);
+            message += (size_t)getRowPositionOfToken(positionOfQuotationMark);
 
             throw InvalidJsonSyntax(message);
         }
@@ -869,10 +891,10 @@ void JsonValidator::validateQuotationMarkPlacement() const {
 }
 
 void JsonValidator::validateColonPlacement() const {
-    unsigned numberOfColons = getCharCount(_tokens.getData(), _tokenCount, ':');
+    long long numberOfColons = _tokens.getCharCount(':');
 
-    for(unsigned i = 0; i < numberOfColons; ++i) {
-        long long positionOfColon = getPositionOfChar(_tokens.getData(), _tokenCount, ':', i + 1);
+    for(long long i = 0; i < numberOfColons; ++i) {
+        long long positionOfColon = _tokens.getPositionOfChar(':', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfColon);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfColon);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfColon);
@@ -883,14 +905,14 @@ void JsonValidator::validateColonPlacement() const {
 
         if(tokenIsInJsonArrayScope(lastPositionOfOpenBrace, lastPositionOfClosedBrace, lastPositionOfOpenBracket, lastPositionOfClosedBracket, 0, 0)) {
             String message("Out of place colon at row ");
-            message += getRowPositionOfToken(positionOfColon);
+            message += (size_t)getRowPositionOfToken(positionOfColon);
 
             throw InvalidJsonSyntax(message);
         }
 
         if(!validTokensPrecedingColonInJsonObject(previousToken, tokenThreePositionsBack)) {
             String message("Out of place colon at row ");
-            message += getRowPositionOfToken(positionOfColon);
+            message += (size_t)getRowPositionOfToken(positionOfColon);
 
             throw InvalidJsonSyntax(message);
         }
@@ -898,10 +920,10 @@ void JsonValidator::validateColonPlacement() const {
 }
 
 void JsonValidator::validateCommaPlacement() const {
-    unsigned numberOfCommas = getCharCount(_tokens.getData(), _tokenCount, ',');
+    long long numberOfCommas = _tokens.getCharCount(',');
 
-    for(unsigned i = 0; i < numberOfCommas; ++i) {
-        long long positionOfComma = getPositionOfChar(_tokens.getData(), _tokenCount, ',', i + 1);
+    for(long long i = 0; i < numberOfCommas; ++i) {
+        long long positionOfComma = _tokens.getPositionOfChar(',', i + 1);
         long long lastPositionOfOpenBrace = getLastPositionOfToken('{', positionOfComma);
         long long lastPositionOfClosedBrace = getLastPositionOfToken('}', positionOfComma);
         long long lastPositionOfOpenBracket = getLastPositionOfToken('[', positionOfComma);
@@ -914,7 +936,7 @@ void JsonValidator::validateCommaPlacement() const {
 
             if(!validTokensPrecedingCommaInJsonObject(previousToken, tokenThreePositionsBack)) {
                 String message("Out of place comma at row ");
-                message += getRowPositionOfToken(positionOfComma);
+                message += (size_t)getRowPositionOfToken(positionOfComma);
 
                 throw InvalidJsonSyntax(message);
             }
@@ -922,7 +944,7 @@ void JsonValidator::validateCommaPlacement() const {
 
         if(!validTokensPrecedingCommaInJsonArray(previousToken)) {
             String message("Out of place comma at row ");
-            message += getRowPositionOfToken(positionOfComma);
+            message += (size_t)getRowPositionOfToken(positionOfComma);
 
             throw InvalidJsonSyntax(message);
         }
@@ -941,7 +963,7 @@ void JsonValidator::validate() const {
     validateBracketPlacement();
 
     validateDigitPlacement();
-    validateDotPlacement();
+    validateDecimalPointPlacement();
     validateMinusPlacement();
     validateValueKeywordPlacement();
 
