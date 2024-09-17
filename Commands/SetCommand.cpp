@@ -1,24 +1,22 @@
 #include "SetCommand.h"
-#include "String.h"
 #include "JsonParser.h"
 
+SetCommand::SetCommand(const SharedPtr<JsonNode>& newNode, const String& path) : JsonCommand(JsonCommandType::SET_COMMAND),
+                                                                                 _newNode(newNode), _path(path) {}
+
+SetCommand::SetCommand(SharedPtr<JsonNode>&& newNode, String&& path) : JsonCommand(JsonCommandType::SET_COMMAND),
+                                                                       _newNode(std::move(newNode)), _path(std::move(path)) {}
+
+SetCommand::SetCommand(const SharedPtr<JsonNode>& newNode, String&& path) : JsonCommand(JsonCommandType::SET_COMMAND),
+                                                                            _newNode(newNode), _path(std::move(path)) {}
+
+SetCommand::SetCommand(SharedPtr<JsonNode>&& newNode, const String& path) : JsonCommand(JsonCommandType::SET_COMMAND),
+                                                                            _newNode(std::move(newNode)), _path(path) {}
+
 void SetCommand::execute() const {
-    String path;
-    String newStr;
+    JsonParser::getInstance()->set(_newNode, _path.getData());
 
-    std::cout << "Enter set path:";
-    std::cin >> path;
-
-    std::cout << "Enter new string:";
-    std::cin >> newStr;
-
-    try {
-        JsonParser::getInstance()->set(path.getData(), newStr.getData());
+    if(!JsonParser::getInstance()->actionIsBeingUndone()) {
+        std::cout << "New element set." << std::endl << std::endl;
     }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "New value set." << std::endl << std::endl;
 }

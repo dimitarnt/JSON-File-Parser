@@ -3,6 +3,6 @@
 
 class CloseCommand : public JsonCommand {
 public:
-    CloseCommand() = default;
+    CloseCommand();
     void execute() const override;
 };

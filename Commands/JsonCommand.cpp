@@ -1,6 +1,11 @@
 #include "JsonCommand.h"
-#include "String.h"
 #include "JsonParser.h"
+
+JsonCommand::JsonCommand(JsonCommandType type) : _type(type) {}
+
+JsonCommandType JsonCommand::getType() const {
+    return _type;
+}
 
 void JsonCommand::saveChangesPrompt() {
     String answer;
@@ -12,7 +17,9 @@ void JsonCommand::saveChangesPrompt() {
         if(answer == "yes") {
 
             try {
-                JsonParser::getInstance()->save();
+                JsonParser::getInstance()->goBack();
+                std::cout << std::endl;
+                JsonParser::getInstance()->save("");
             }
             catch(const std::exception& exception) {
                 std::cout << exception.what() << std::endl << std::endl;

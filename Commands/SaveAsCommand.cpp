@@ -1,45 +1,20 @@
 #include "SaveAsCommand.h"
-#include "String.h"
 #include "JsonParser.h"
 
+SaveAsCommand::SaveAsCommand(const String& fileName, const String& path) : JsonCommand(JsonCommandType::SAVE_AS_COMMAND),
+                                                                           _fileName(fileName), _path(path) {}
+
+SaveAsCommand::SaveAsCommand(String&& fileName, String&& path) : JsonCommand(JsonCommandType::SAVE_AS_COMMAND),
+                                                                 _fileName(std::move(fileName)), _path(std::move(path)) {}
+
+SaveAsCommand::SaveAsCommand(const String& fileName, String&& path) : JsonCommand(JsonCommandType::SAVE_AS_COMMAND),
+                                                                      _fileName(fileName), _path(std::move(path)) {}
+
+SaveAsCommand::SaveAsCommand(String&& fileName, const String& path) : JsonCommand(JsonCommandType::SAVE_AS_COMMAND),
+                                                                      _fileName(std::move(fileName)), _path(path) {}
+
 void SaveAsCommand::execute() const {
-    String fileName;
-    String answer;
-
-    std::cout << "Enter file name to save to:";
-    std::cin >> fileName;
-
-    std::cout << "Would you like to save only a specific path?(yes/no)" << std::endl;
-    std::cin >> answer;
-
-    if(answer == "yes") {
-        String path;
-
-        std::cout << "Enter path:";
-        std::cin >> path;
-
-        try {
-            JsonParser::getInstance()->saveAs(fileName.getData(), path.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else if(answer == "no") {
-
-        try {
-            JsonParser::getInstance()->saveAs(fileName.getData());
-        }
-        catch(const std::exception& exception) {
-            std::cout << exception.what() << std::endl << std::endl;
-            return;
-        }
-    }
-    else {
-        std::cout << "Invalid answer." << std::endl << std::endl;
-        return;
-    }
+    JsonParser::getInstance()->saveAs(_fileName.getData(), _path.getData());
 
     std::cout << "File saved." << std::endl << std::endl;
 }

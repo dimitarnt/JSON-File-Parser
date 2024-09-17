@@ -1,8 +1,8 @@
 #pragma once
 #include "JsonCommand.h"
 
-class CreateCommand : public JsonCommand {
+class UndoAllCommand : public JsonCommand {
 public:
-    CreateCommand() = default;
+    UndoAllCommand();
     void execute() const override;
 };

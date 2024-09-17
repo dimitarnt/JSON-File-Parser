@@ -1,17 +1,10 @@
 #include "ExitCommand.h"
-#include "String.h"
 #include "JsonParser.h"
 
-void ExitCommand::execute() const {
-    String answer;
+ExitCommand::ExitCommand() : JsonCommand(JsonCommandType::EXIT_COMMAND) {}
 
+void ExitCommand::execute() const {
     saveChangesPrompt();
 
-    try {
-        JsonParser::freeInstance();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
+    JsonParser::freeInstance();
 }

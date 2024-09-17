@@ -1,16 +1,12 @@
 #include "CloseCommand.h"
 #include "JsonParser.h"
 
+CloseCommand::CloseCommand() : JsonCommand(JsonCommandType::CLOSE_COMMAND) {}
+
 void CloseCommand::execute() const {
     saveChangesPrompt();
 
-    try {
-        JsonParser::getInstance()->closeFile();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
+    JsonParser::getInstance()->closeFile();
 
     std::cout << "File closed." << std::endl << std::endl;
 }

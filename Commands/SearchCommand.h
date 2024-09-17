@@ -2,7 +2,12 @@
 #include "JsonCommand.h"
 
 class SearchCommand : public JsonCommand {
+private:
+    String _searchTerm;
+
 public:
-    SearchCommand() = default;
+    explicit SearchCommand(const String& searchTerm);
+    explicit SearchCommand(String&& searchTerm);
+
     void execute() const override;
 };

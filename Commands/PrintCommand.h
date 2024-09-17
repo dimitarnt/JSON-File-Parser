@@ -3,6 +3,6 @@
 
 class PrintCommand : public JsonCommand {
 public:
-    PrintCommand() = default;
+    PrintCommand();
     void execute() const override;
 };

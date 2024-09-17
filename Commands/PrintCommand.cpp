@@ -1,15 +1,10 @@
 #include "PrintCommand.h"
 #include "JsonParser.h"
 
+PrintCommand::PrintCommand() : JsonCommand(JsonCommandType::PRINT_COMMAND) {}
+
 void PrintCommand::execute() const {
+    JsonParser::getInstance()->print();
 
-    try {
-        JsonParser::getInstance()->print();
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << std::endl;
+    std::cout << std::endl << std::endl;
 }

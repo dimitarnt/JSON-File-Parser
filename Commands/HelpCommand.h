@@ -3,6 +3,6 @@
 
 class HelpCommand : public JsonCommand {
 public:
-    HelpCommand() = default;
+    HelpCommand();
     void execute() const override;
 };

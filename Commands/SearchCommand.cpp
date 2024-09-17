@@ -1,20 +1,12 @@
 #include "SearchCommand.h"
-#include "String.h"
 #include "JsonParser.h"
 
+SearchCommand::SearchCommand(const String& searchTerm) : JsonCommand(JsonCommandType::SEARCH_COMMAND), _searchTerm(searchTerm) {}
+
+SearchCommand::SearchCommand(String&& searchTerm) : JsonCommand(JsonCommandType::SEARCH_COMMAND), _searchTerm(std::move(searchTerm)) {}
+
 void SearchCommand::execute() const {
-    String searchTerm;
+    JsonParser::getInstance()->search(_searchTerm.getData());
 
-    std::cout << "Enter search term:";
-    std::cin >> searchTerm;
-
-    try {
-        JsonParser::getInstance()->search(searchTerm.getData());
-    }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << std::endl;
+    std::cout << std::endl << std::endl;
 }

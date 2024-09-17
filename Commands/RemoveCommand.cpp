@@ -1,20 +1,14 @@
 #include "RemoveCommand.h"
-#include "String.h"
 #include "JsonParser.h"
 
+RemoveCommand::RemoveCommand(const String& path) : JsonCommand(JsonCommandType::REMOVE_COMMAND), _path(path) {}
+
+RemoveCommand::RemoveCommand(String&& path) : JsonCommand(JsonCommandType::REMOVE_COMMAND), _path(std::move(path)) {}
+
 void RemoveCommand::execute() const {
-    String path;
+    JsonParser::getInstance()->remove(_path.getData());
 
-    std::cout << "Enter path:";
-    std::cin >> path;
-
-    try {
-        JsonParser::getInstance()->remove(path.getData());
+    if(!JsonParser::getInstance()->actionIsBeingUndone()) {
+        std::cout << "Element removed." << std::endl << std::endl;
     }
-    catch(const std::exception& exception) {
-        std::cout << exception.what() << std::endl << std::endl;
-        return;
-    }
-
-    std::cout << "Element removed." << std::endl << std::endl;
 }

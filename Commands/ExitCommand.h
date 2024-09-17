@@ -3,6 +3,6 @@
 
 class ExitCommand : public JsonCommand {
 public:
-    ExitCommand() = default;
+    ExitCommand();
     void execute() const override;
 };

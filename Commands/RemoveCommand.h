@@ -2,7 +2,12 @@
 #include "JsonCommand.h"
 
 class RemoveCommand : public JsonCommand {
+private:
+    String _path;
+
 public:
-    RemoveCommand() = default;
+    explicit RemoveCommand(const String& path);
+    explicit RemoveCommand(String&& path);
+
     void execute() const override;
 };

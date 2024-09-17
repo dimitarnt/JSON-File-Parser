@@ -1,5 +1,6 @@
 #include "HelpCommand.h"
-#include "String.h"
+
+HelpCommand::HelpCommand() : JsonCommand(JsonCommandType::HELP_COMMAND) {}
 
 void HelpCommand::execute() const {
     std::cout << "List of available commands:" << std::endl;
