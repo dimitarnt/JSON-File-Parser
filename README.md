@@ -23,24 +23,24 @@ the corresponding depths of the JSON file point to a specific part of the JSON f
 
 ***Example JSON file***
 
-{<br>
-  "person": {<br>
-    "name": "John",<br>
-    "age": 25,<br>
-    "past jobs": [<br>
-      "accountant",<br>
-      "cashier",<br>
-      "zookeeper"<br>
-    ],<br>
-    "is homeowner": true<br>
-  },<br>
-  "random": null,<br>
-  "colors": [<br>
-    red,<br>
-    green,<br>
-    blue<br>
-  ]<br>
-}<br>
+{<br/>
+  "person": {<br/>
+    "name": "John",<br/>
+    "age": 25,<br/>
+    "past jobs": [<br/>
+      "accountant",<br/>
+      "cashier",<br/>
+      "zookeeper"<br/>
+    ],<br/>
+    "is homeowner": true<br/>
+  },<br/>
+  "random": null,<br/>
+  "colors": [<br/>
+    red,<br/>
+    green,<br/>
+    blue<br/>
+  ]<br/>
+}<br/>
 
 ***The program provides the following commands:***
 
