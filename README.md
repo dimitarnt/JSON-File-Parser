@@ -24,7 +24,7 @@ the corresponding depths of the JSON file point to a specific part of the JSON f
 ***Example JSON file***
 
 {<br/>
-  "person": {<br/>
+&nbsp&nbsp"person": {<br/>
     "name": "John",<br/>
     "age": 25,<br/>
     "past jobs": [<br/>
