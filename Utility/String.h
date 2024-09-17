@@ -5,7 +5,7 @@
 
 namespace {
     const int MAX_SMALL_STRING_LENGTH = NUMBER_OF_BYTES_IN_CHAR_PTR + NUMBER_OF_BYTES_IN_SIZE_T - 1;
-    const long long MAX_STRING_LENGTH = NUMBER_OF_BYTES_IN_SIZE_T == 4 ? pow(2, 31) - 1 : pow(2, 63) - 1;
+    const size_t MAX_STRING_LENGTH = 9223372036854775806; //2^63 - 2
 
     const char* const DEFAULT_STRING = "\0";
 }
@@ -25,7 +25,9 @@ class String {
     void moveFrom(String&& other);
     void free();
 
-    void assertLength(size_t length) const;
+    static void assertData(const char* data);
+    static void assertLength(size_t length);
+    void assertIndex(size_t index) const;
 
     bool canBeOptimized(size_t strLength) const;
     bool isOptimized() const;
@@ -43,8 +45,15 @@ public:
     const char* getData() const;
     size_t getLength() const;
 
+    void clear();
+
     String substring(size_t begin, size_t substringLength) const;
+    String getFormattedWord(size_t wordPlace) const;
+    unsigned getCharCount(char symbol) const;
+    long long getPositionOfChar(char symbol, long long timesMet) const;
+
     String& operator+=(const String& other);
+    String& operator+=(const char* other);
     String& operator+=(char symbol);
     String& operator+=(size_t number);
     String& operator+=(unsigned number);
@@ -52,10 +61,12 @@ public:
     char& operator[](size_t index);
     char operator[](size_t index) const;
 
+    bool isNumber() const;
     bool isNaturalNumber() const;
     bool isEmpty() const;
 
     friend String operator+(const String& lhs, const String& rhs);
+    friend String operator+(const String& lhs, const char* rhs);
     friend String operator+(const String& lhs, char symbol);
     friend String operator+(const String& lhs, size_t number);
     friend String operator+(const String& lhs, unsigned number);
@@ -63,6 +74,7 @@ public:
 };
 
 String operator+(const String& lhs, const String& rhs);
+String operator+(const String& lhs, const char* rhs);
 String operator+(const String& lhs, char symbol);
 String operator+(const String& lhs, size_t number);
 String operator+(const String& lhs, unsigned number);

@@ -8,6 +8,8 @@ const int NUMBER_OF_DIGITS = 10;
 const int NUMBER_OF_JSON_KEYWORDS = 3;
 
 const char* const JSON_FILE_EXTENSION = ".json";
+const char COMMAND_PARAMETER_STARTING_DELIMITER = '<';
+const char COMMAND_PARAMETER_ENDING_DELIMITER = '>';
 
 const int MAX_SIZE_T_DIGITS = 20;
 const int MAX_UNSIGNED_INT_DIGITS = 10;

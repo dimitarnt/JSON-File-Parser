@@ -37,7 +37,7 @@ String::~String() {
 }
 
 void String::copyFrom(const String& other) {
-    if (other.isOptimized()) {
+    if(other.isOptimized()) {
         strcpy(_smallString, other._smallString);
         _smallString[MAX_SMALL_STRING_LENGTH] = 0;
 
@@ -61,37 +61,47 @@ void String::moveFrom(String&& other) {
 }
 
 void String::free() {
-    if (!isOptimized()) {
+    if(!isOptimized()) {
         delete[] _data;
     }
     _data = nullptr;
     _inflatedLength = 0;
 }
 
-void String::assertLength(size_t length) const {
+void String::assertData(const char* data) {
+    if (data == nullptr) {
+        throw std::invalid_argument("Error, data is nullptr");
+    }
+}
+
+void String::assertLength(size_t length) {
     if(length > MAX_STRING_LENGTH) {
         throw std::invalid_argument("Error, data is too long");
     }
 }
 
+void String::assertIndex(size_t index) const {
+    if(index >= getLength()) {
+        throw std::out_of_range("Error, index is out of range");
+    }
+}
+
 size_t String::longStringLength() const {
 
-    return _inflatedLength - MAX_STRING_LENGTH - 1;
+    return _inflatedLength - MAX_STRING_LENGTH - 2;
 }
 
 void String::setMembers(const char* data) {
-    if (data == nullptr) {
-        throw std::invalid_argument("Error, data is nullptr");
-    }
+    assertData(data);
 
     size_t dataLength = strlen(data);
     assertLength(dataLength);
 
-    if (!isOptimized()) {
+    if(!isOptimized()) {
         delete[] _data;
     }
 
-    if (canBeOptimized(dataLength)) {
+    if(canBeOptimized(dataLength)) {
 
         strcpy(_smallString, data);
 
@@ -118,7 +128,7 @@ bool String::isOptimized() const {
 }
 
 const char* String::getData() const {
-    if (isOptimized()) {
+    if(isOptimized()) {
         return _smallString;
     }
     else {
@@ -127,7 +137,7 @@ const char* String::getData() const {
 }
 
 size_t String::getLength() const {
-    if (isOptimized()) {
+    if(isOptimized()) {
         return strlen(_smallString);
     }
     else {
@@ -135,8 +145,14 @@ size_t String::getLength() const {
     }
 }
 
+void String::clear() {
+    *this = "";
+}
+
 char& String::operator[](size_t index) {
-    if (isOptimized()) {
+    assertIndex(index);
+
+    if(isOptimized()) {
         return _smallString[index];
     }
     else {
@@ -145,12 +161,62 @@ char& String::operator[](size_t index) {
 }
 
 char String::operator[](size_t index) const {
-    if (isOptimized()) {
+    assertIndex(index);
+
+    if(isOptimized()) {
         return _smallString[index];
     }
     else {
         return _data[index];
     }
+}
+
+bool String::isNumber() const {
+    size_t currentIndex = 0;
+    size_t numberOfDigits = getLength();
+    bool decimalPointMet = false;
+
+    if(isEmpty()) {
+        return false;
+    }
+
+    if((*this)[currentIndex] == '-') {
+
+        if((*this) == "-0") {
+            return false;
+        }
+
+        currentIndex++;
+    }
+
+    if((*this)[currentIndex] == '.' || (*this)[numberOfDigits - 1] == '.') {
+        return false;
+    }
+
+    if(numberOfDigits > 1 && (*this)[currentIndex] == '0' && (*this)[currentIndex + 1] != '.') {
+        return false;
+    }
+
+    while(currentIndex < numberOfDigits) {
+        char currentDigit = (*this)[currentIndex];
+
+        if(!isDigit(currentDigit) && currentDigit != '.') {
+            return false;
+        }
+
+        if(currentDigit == '.') {
+
+            if(decimalPointMet) {
+                return false;
+            }
+
+            decimalPointMet = true;
+        }
+
+        currentIndex++;
+    }
+
+    return true;
 }
 
 bool String::isNaturalNumber() const {
@@ -160,13 +226,13 @@ bool String::isNaturalNumber() const {
         return false;
     }
 
-    if(getData()[0] == '0' && currentLength > 1) {
+    if((*this)[0] == '0' && currentLength > 1) {
         return false;
     }
 
     for(size_t i = 0; i < currentLength; ++i) {
 
-        if(getData()[i] < '0' || getData()[i] > '9') {
+        if(!isDigit((*this)[i])) {
             return false;
         }
     }
@@ -180,13 +246,13 @@ bool String::isEmpty() const {
 }
 
 String String::substring(size_t begin, size_t substringLength) const {
-    if (begin + substringLength > getLength()) {
+    if(begin + substringLength > getLength()) {
         throw std::length_error("Error, substring is out of range");
     }
 
-    if (canBeOptimized(substringLength)) {
+    if(canBeOptimized(substringLength)) {
 
-        if (isOptimized()) {
+        if(isOptimized()) {
             char str[MAX_SMALL_STRING_LENGTH + 1] = {};
 
             for (size_t i = 0; i < substringLength; i++) {
@@ -214,7 +280,7 @@ String String::substring(size_t begin, size_t substringLength) const {
     }else {
         char* str = new char[substringLength + 1] {};
 
-        for (size_t i = 0; i < substringLength; i++) {
+        for(size_t i = 0; i < substringLength; i++) {
             str[i] = _data[begin + i];
         }
         str[substringLength] = '\0';
@@ -225,10 +291,69 @@ String String::substring(size_t begin, size_t substringLength) const {
     }
 }
 
+String String::getFormattedWord(size_t wordPlace) const {
+    size_t strLength = getLength();
+
+    size_t wordStart = 0;
+    bool wordHasStarted = false;
+
+    for(size_t i = 0; i <= strLength; ++i) {
+        if(i == strLength || (*this)[i] == ' ' || (*this)[i] == '\t' || (*this)[i] == '\n') {
+            if(wordHasStarted) {
+                wordPlace--;
+            }
+
+            if(wordPlace == 0) {
+                return substring(wordStart, i - wordStart);
+            }
+
+            wordHasStarted = false;
+
+            continue;
+        }
+
+        if(!wordHasStarted) {
+            wordStart = i;
+            wordHasStarted = true;
+        }
+    }
+
+    return "";
+}
+
+unsigned String::getCharCount(char symbol) const {
+    size_t strLength = getLength();
+    size_t count = 0;
+
+    for(unsigned i = 0; i < strLength; ++i) {
+        if((*this)[i] == symbol) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+long long String::getPositionOfChar(char symbol, long long timesMet) const {
+    size_t strLength = getLength();
+
+    for(unsigned i = 0; i < strLength; ++i) {
+        if((*this)[i] == symbol) {
+            timesMet--;
+        }
+
+        if(timesMet == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 String& String::operator+=(const String& other) {
     size_t concatenatedLength = this->getLength() + other.getLength();
 
-    if (canBeOptimized(concatenatedLength)) {
+    if(canBeOptimized(concatenatedLength)) {
         char str[MAX_SMALL_STRING_LENGTH + 1] = {};
 
         strcpy(str, getData());
@@ -243,6 +368,33 @@ String& String::operator+=(const String& other) {
 
         strcpy(str, getData());
         strcat(str, other.getData());
+
+        setMembers(str);
+
+        return *this;
+    }
+}
+
+String& String::operator+=(const char* other) {
+    assertData(other);
+
+    size_t concatenatedLength = this->getLength() + strlen(other);
+
+    if(canBeOptimized(concatenatedLength)) {
+        char str[MAX_SMALL_STRING_LENGTH + 1] = {};
+
+        strcpy(str, getData());
+        strcat(str, other);
+
+        setMembers(str);
+
+        return *this;
+
+    }else {
+        char* str = new char[concatenatedLength + 1] {};
+
+        strcpy(str, getData());
+        strcat(str, other);
 
         setMembers(str);
 
@@ -279,7 +431,7 @@ String& String::operator+=(unsigned number) {
 String operator+(const String& lhs, const String& rhs) {
     size_t concatenatedLength = lhs.getLength() + rhs.getLength();
 
-    if (lhs.canBeOptimized(concatenatedLength)) {
+    if(lhs.canBeOptimized(concatenatedLength)) {
         char str[MAX_SMALL_STRING_LENGTH + 1] = {};
 
         strcpy(str, lhs.getData());
@@ -294,6 +446,33 @@ String operator+(const String& lhs, const String& rhs) {
 
         strcpy(str, lhs.getData());
         strcat(str, rhs.getData());
+
+        String result(str);
+
+        return result;
+    }
+}
+
+String operator+(const String& lhs, const char* rhs) {
+    lhs.assertData(rhs);
+
+    size_t concatenatedLength = lhs.getLength() + strlen(rhs);
+
+    if(lhs.canBeOptimized(concatenatedLength)) {
+        char str[MAX_SMALL_STRING_LENGTH + 1] = {};
+
+        strcpy(str, lhs.getData());
+        strcat(str, rhs);
+
+        String result(str);
+
+        return result;
+
+    }else {
+        char* str = new char[concatenatedLength + 1] {};
+
+        strcpy(str, lhs.getData());
+        strcat(str, rhs);
 
         String result(str);
 

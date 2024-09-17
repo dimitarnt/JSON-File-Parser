@@ -25,29 +25,7 @@ char getDigit(size_t num, size_t index, size_t digitCount) {
     return '0' + digit;
 }
 
-unsigned getCharCount(const char* str, size_t strLength, char symbol) {
-    size_t count = 0;
+bool isDigit(char symbol) {
 
-    for(unsigned i = 0; i < strLength; ++i) {
-        if(str[i] == symbol) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-long long getPositionOfChar(const char* str, size_t strLength, char symbol, unsigned timesMet) {
-
-    for (unsigned i = 0; i < strLength; ++i) {
-        if (str[i] == symbol) {
-            timesMet--;
-        }
-
-        if (timesMet == 0) {
-            return i;
-        }
-    }
-
-    return -1;
+    return symbol >= '0' && symbol <= '9';
 }
