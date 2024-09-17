@@ -11,7 +11,6 @@ JsonNodeType JsonNode::getType() const {
 
 String JsonNode::parseValue(std::ifstream& in) {
     String result;
-    char currentChar = 0;
 
     switch(in.peek()) {
         case '0':
@@ -31,31 +30,13 @@ String JsonNode::parseValue(std::ifstream& in) {
         case 'n':
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, ' ', '\t', ',', '}', ']');
 
-            while(true) {
-                currentChar = (char)in.peek();
-
-                if(currentChar == ':' || currentChar == ',' || currentChar == '}' || currentChar == ']') {
-                    break;
-                }
-
-                in.get();
-            }
-
             return result;
 
         case '\"':
             in.get();
             getCharactersUntilDelimiter(in, result, BUFFER_SIZE, '\"');
 
-            while(true) {
-                currentChar = (char)in.peek();
-
-                if(currentChar == ':' || currentChar == ',' || currentChar == '}' || currentChar == ']') {
-                    break;
-                }
-
-                in.get();
-            }
+            in.get();
 
             return result;
 
@@ -85,22 +66,24 @@ void JsonNode::putIndentationInFile(std::ofstream& out, unsigned nestingLevel) {
 }
 
 unsigned JsonNode::lastNestingLevelInPath(const char* path) {
-    size_t pathLength = strlen(path);
+    String pathStr(path);
 
-    return getCharCount(path, pathLength, '/');
+    return pathStr.getCharCount('/');
 }
 
 String JsonNode::getKeyInPath(const char* path, unsigned nestingLevel) {
-    if(nestingLevel > lastNestingLevelInPath(path)) {
+    long long pathLastNestingLevel = lastNestingLevelInPath(path);
+
+    if(nestingLevel > pathLastNestingLevel) {
         throw std::logic_error("Invalid nesting level for given path");
     }
 
     String key;
-    size_t pathLength = strlen(path);
+    String pathStr(path);
     size_t startIndex = 0;
 
     if(nestingLevel != 0) {
-        startIndex = getPositionOfChar(path, pathLength, '/', nestingLevel) + 1;
+        startIndex = pathStr.getPositionOfChar('/', nestingLevel) + 1;
     }
 
     for(size_t i = startIndex; path[i] != '/' && path[i] != '\0'; ++i) {

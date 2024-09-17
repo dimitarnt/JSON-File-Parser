@@ -7,7 +7,8 @@ enum class JsonNodeType {
     JSON_OBJECT,
     JSON_ARRAY,
     JSON_STRING,
-    JSON_VALUE
+    JSON_KEYWORD,
+    JSON_NUMBER
 };
 
 namespace {
@@ -26,8 +27,8 @@ public:
 
     JsonNodeType getType() const;
 
-    virtual void print(unsigned nestingLevel, bool isInArray) const = 0;
-    virtual void save(std::ofstream& out, unsigned nestingLevel, bool isInArray) const = 0;
+    virtual void print(unsigned nestingLevel) const = 0;
+    virtual void save(std::ofstream& out, unsigned nestingLevel) const = 0;
 
     //Get a json value or a json string from a file
     static String parseValue(std::ifstream& in);
