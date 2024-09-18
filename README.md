@@ -23,6 +23,7 @@ object, JSON array, string, keyword or number.
 **path** - a chain of keys or indexes, separated by the character */*, that when being followed through 
 the corresponding depths of the JSON file point to a specific part of the JSON file
 
+---
 
 ***Example JSON file***
 
@@ -45,6 +46,7 @@ the corresponding depths of the JSON file point to a specific part of the JSON f
 &nbsp;&nbsp;&nbsp;]<br/>
 }<br/>
 
+---
 
 ***The program provides the following commands:***
 
