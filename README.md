@@ -1,7 +1,9 @@
 # JSON File Parser
 
 Parser for JSON files with functionalities for inspecting and changing the contents of the file.
-<br/><br/>
+
+---
+
 ***Terminology used:***
 
 **JSON pair** - a structure consisting of a key that is a string and a value that can be a JSON
